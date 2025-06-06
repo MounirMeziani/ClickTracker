@@ -45,11 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         record = await storage.createClickRecord({ 
           date: today, 
-          clicks: 1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          id: 0,
-          playerId: 1
+          clicks: 1
         });
       }
 
