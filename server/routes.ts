@@ -2,6 +2,15 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertClickRecordSchema, updateClickRecordSchema } from "@shared/schema";
+import { 
+  calculateLevel, 
+  getUnlockedSkins, 
+  checkAchievements, 
+  generateDailyChallenge, 
+  CAREER_LEVELS, 
+  SKINS, 
+  ACHIEVEMENTS 
+} from "./gameLogic";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -16,21 +25,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Increment today's click count
+  // Increment today's click count with game progression
   app.post("/api/clicks/increment", async (req, res) => {
     try {
       const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const hour = now.getHours();
+      const isEarlyMorning = hour >= 5 && hour < 8;
+      const isLateNight = hour >= 22 || hour < 5;
+
+      // Update click record
       const existingRecord = await storage.getClickRecordByDate(today);
-      
       let record;
       if (existingRecord) {
         record = await storage.updateClickRecord(today, existingRecord.clicks + 1);
       } else {
         record = await storage.createClickRecord({ date: today, clicks: 1 });
       }
-      
-      res.json(record);
+
+      // Get or create player profile
+      let profile = await storage.getPlayerProfile();
+      if (!profile) {
+        profile = await storage.createPlayerProfile({
+          currentLevel: 1,
+          totalClicks: 1,
+          currentSkin: "rookie"
+        });
+      } else {
+        // Update total clicks and level
+        const newTotalClicks = profile.totalClicks + 1;
+        const newLevel = calculateLevel(newTotalClicks);
+        const unlockedSkins = getUnlockedSkins(newLevel);
+        
+        // Check for new achievements
+        const newAchievements = checkAchievements(
+          newTotalClicks,
+          profile.streakCount,
+          record.clicks,
+          profile.achievements,
+          isEarlyMorning,
+          isLateNight,
+          0 // TODO: track daily challenges completed
+        );
+
+        profile = await storage.updatePlayerProfile({
+          ...profile,
+          totalClicks: newTotalClicks,
+          currentLevel: newLevel,
+          unlockedSkins,
+          achievements: [...profile.achievements, ...newAchievements]
+        });
+      }
+
+      res.json({ 
+        record, 
+        profile,
+        levelUp: profile.currentLevel > (profile.totalClicks - 1 ? calculateLevel(profile.totalClicks - 1) : 1),
+        newAchievements: profile.achievements.slice(-3) // Return last 3 achievements
+      });
     } catch (error) {
+      console.error('Increment error:', error);
       res.status(500).json({ message: "Failed to increment clicks" });
     }
   });
@@ -166,6 +220,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(last7Days);
     } catch (error) {
       res.status(500).json({ message: "Failed to get last 7 days data" });
+    }
+  });
+
+  // Get player profile and game data
+  app.get("/api/player/profile", async (req, res) => {
+    try {
+      let profile = await storage.getPlayerProfile();
+      if (!profile) {
+        profile = await storage.createPlayerProfile({
+          currentLevel: 1,
+          totalClicks: 0,
+          currentSkin: "rookie"
+        });
+      }
+
+      const levelData = CAREER_LEVELS[profile.currentLevel as keyof typeof CAREER_LEVELS];
+      const nextLevelData = CAREER_LEVELS[(profile.currentLevel + 1) as keyof typeof CAREER_LEVELS];
+      
+      res.json({
+        profile,
+        levelData,
+        nextLevelData,
+        availableSkins: Object.entries(SKINS).map(([key, skin]) => ({
+          id: key,
+          ...skin,
+          unlocked: profile.unlockedSkins.includes(key)
+        })),
+        achievements: Object.entries(ACHIEVEMENTS).map(([key, achievement]) => ({
+          id: key,
+          ...achievement,
+          unlocked: profile.achievements.includes(key)
+        }))
+      });
+    } catch (error) {
+      console.error('Profile error:', error);
+      res.status(500).json({ message: "Failed to get player profile" });
+    }
+  });
+
+  // Update player skin
+  app.post("/api/player/skin", async (req, res) => {
+    try {
+      const { skinId } = req.body;
+      let profile = await storage.getPlayerProfile();
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Player profile not found" });
+      }
+
+      if (!profile.unlockedSkins.includes(skinId)) {
+        return res.status(400).json({ message: "Skin not unlocked" });
+      }
+
+      profile = await storage.updatePlayerProfile({
+        ...profile,
+        currentSkin: skinId
+      });
+
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update skin" });
+    }
+  });
+
+  // Get daily challenge
+  app.get("/api/challenge/daily", async (req, res) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      let challenge = await storage.getDailyChallengeByDate(today);
+      
+      if (!challenge) {
+        // Generate new daily challenge
+        const profile = await storage.getPlayerProfile();
+        const level = profile?.currentLevel || 1;
+        const challengeData = generateDailyChallenge(today, level);
+        challenge = await storage.createDailyChallenge(challengeData);
+      }
+
+      res.json(challenge);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get daily challenge" });
+    }
+  });
+
+  // Complete daily challenge
+  app.post("/api/challenge/complete", async (req, res) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      let profile = await storage.getPlayerProfile();
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Player profile not found" });
+      }
+
+      if (profile.dailyChallengeCompleted && profile.lastChallengeDate === today) {
+        return res.status(400).json({ message: "Daily challenge already completed" });
+      }
+
+      // Update streak
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      let newStreak = 1;
+      if (profile.lastChallengeDate === yesterdayStr) {
+        newStreak = profile.streakCount + 1;
+      }
+
+      profile = await storage.updatePlayerProfile({
+        ...profile,
+        dailyChallengeCompleted: true,
+        lastChallengeDate: today,
+        streakCount: newStreak
+      });
+
+      res.json({ 
+        success: true, 
+        profile,
+        streakCount: newStreak,
+        reward: "Challenge completed! +50 XP"
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to complete challenge" });
     }
   });
 

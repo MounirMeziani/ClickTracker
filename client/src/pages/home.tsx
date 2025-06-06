@@ -1,10 +1,26 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MousePointer, CalendarDays, Calendar, Trophy, BarChart3, Flame, Plus, Minus } from "lucide-react";
+import { 
+  MousePointer, 
+  CalendarDays, 
+  Calendar, 
+  Trophy, 
+  BarChart3, 
+  Flame, 
+  Plus, 
+  Minus, 
+  Star, 
+  Crown, 
+  Target,
+  Zap,
+  Award,
+  Shirt
+} from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface TodayData {
@@ -38,6 +54,58 @@ interface DayData {
   dayName: string;
   shortDate: string;
   isToday: boolean;
+}
+
+interface PlayerProfile {
+  id: number;
+  currentLevel: number;
+  totalClicks: number;
+  currentSkin: string;
+  unlockedSkins: string[];
+  achievements: string[];
+  dailyChallengeCompleted: boolean;
+  lastChallengeDate?: string;
+  streakCount: number;
+}
+
+interface GameData {
+  profile: PlayerProfile;
+  levelData: {
+    name: string;
+    title: string;
+    clicksRequired: number;
+    description: string;
+  };
+  nextLevelData?: {
+    name: string;
+    title: string;
+    clicksRequired: number;
+    description: string;
+  };
+  availableSkins: Array<{
+    id: string;
+    name: string;
+    description: string;
+    unlockLevel: number;
+    color: string;
+    unlocked: boolean;
+  }>;
+  achievements: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    unlocked: boolean;
+  }>;
+}
+
+interface DailyChallenge {
+  id: number;
+  date: string;
+  challengeType: string;
+  targetValue: number;
+  description: string;
+  reward: string;
 }
 
 export default function Home() {
