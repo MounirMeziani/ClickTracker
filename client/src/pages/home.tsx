@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { MousePointer, CalendarDays, Calendar, Trophy, BarChart3, Flame } from "lucide-react";
+import { MousePointer, CalendarDays, Calendar, Trophy, BarChart3, Flame, Plus, Minus } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface TodayData {
@@ -91,7 +91,25 @@ export default function Home() {
     },
   });
 
-  const handleClick = () => {
+  const decrementMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/clicks/decrement"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/weekly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/monthly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/all-time"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/last-7-days"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to decrease clicks. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleIncrement = () => {
     if (isAnimating || incrementMutation.isPending) return;
     
     setIsAnimating(true);
@@ -107,10 +125,26 @@ export default function Home() {
     }, 600);
   };
 
+  const handleDecrement = () => {
+    if (isAnimating || decrementMutation.isPending || (todayData?.clicks || 0) <= 0) return;
+    
+    setIsAnimating(true);
+    decrementMutation.mutate();
+    
+    // Light haptic feedback for mobile devices
+    if (navigator.vibrate) {
+      navigator.vibrate(30);
+    }
+    
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 600);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
-      handleClick();
+      handleIncrement();
     }
   };
 
@@ -185,26 +219,62 @@ export default function Home() {
       <section className="text-center mb-8">
         <Card className="border-gray-100 shadow-lg">
           <CardContent className="pt-8 pb-12 md:pt-12 md:pb-16">
-            {/* Click Button */}
-            <div className="relative inline-block mb-6">
-              <Button
-                onClick={handleClick}
-                onKeyDown={handleKeyDown}
-                disabled={incrementMutation.isPending}
-                className={`w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-primary to-primary-dark text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/30 relative overflow-hidden ${
-                  isAnimating ? 'scale-95' : ''
-                } ${incrementMutation.isPending ? 'opacity-50' : ''}`}
-                style={{ 
-                  background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(207 90% 45%))',
-                  transition: 'all 0.2s ease-in-out'
-                }}
-              >
-                <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
-                <MousePointer className="relative z-10" size={48} />
-              </Button>
-              {isAnimating && (
-                <div className="absolute inset-0 border-4 border-primary rounded-full animate-ping opacity-75"></div>
-              )}
+            {/* Click Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-6">
+              {/* Decrease Button */}
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  onClick={handleDecrement}
+                  disabled={decrementMutation.isPending || (todayData?.clicks || 0) <= 0}
+                  className={`w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-500/30 relative overflow-hidden touch-manipulation ${
+                    isAnimating ? 'scale-95' : ''
+                  } ${decrementMutation.isPending || (todayData?.clicks || 0) <= 0 ? 'opacity-30' : ''}`}
+                >
+                  <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
+                  <Minus className="relative z-10" size={24} />
+                </Button>
+                <span className="text-xs text-text-secondary font-medium">Remove</span>
+              </div>
+
+              {/* Main Click Button */}
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative">
+                  <Button
+                    onClick={handleIncrement}
+                    onKeyDown={handleKeyDown}
+                    disabled={incrementMutation.isPending}
+                    className={`w-36 h-36 md:w-44 md:h-44 bg-gradient-to-br from-primary to-primary-dark text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/30 relative overflow-hidden touch-manipulation ${
+                      isAnimating ? 'scale-95' : ''
+                    } ${incrementMutation.isPending ? 'opacity-50' : ''}`}
+                    style={{ 
+                      background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(207 90% 45%))',
+                      transition: 'all 0.2s ease-in-out'
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
+                    <MousePointer className="relative z-10" size={52} />
+                  </Button>
+                  {isAnimating && (
+                    <div className="absolute inset-0 border-4 border-primary rounded-full animate-ping opacity-75"></div>
+                  )}
+                </div>
+                <span className="text-sm text-text-secondary font-medium">Tap to Count</span>
+              </div>
+
+              {/* Increase Button */}
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  onClick={handleIncrement}
+                  disabled={incrementMutation.isPending}
+                  className={`w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-green-500/30 relative overflow-hidden touch-manipulation ${
+                    isAnimating ? 'scale-95' : ''
+                  } ${incrementMutation.isPending ? 'opacity-50' : ''}`}
+                >
+                  <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
+                  <Plus className="relative z-10" size={24} />
+                </Button>
+                <span className="text-xs text-text-secondary font-medium">Add</span>
+              </div>
             </div>
 
             {/* Today's Count */}

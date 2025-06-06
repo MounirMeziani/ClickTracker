@@ -35,6 +35,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Decrement today's click count
+  app.post("/api/clicks/decrement", async (req, res) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const existingRecord = await storage.getClickRecordByDate(today);
+      
+      if (!existingRecord || existingRecord.clicks <= 0) {
+        res.json({ clicks: 0, date: today });
+        return;
+      }
+      
+      const record = await storage.updateClickRecord(today, existingRecord.clicks - 1);
+      res.json(record);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to decrement clicks" });
+    }
+  });
+
   // Get weekly statistics
   app.get("/api/clicks/weekly", async (req, res) => {
     try {
