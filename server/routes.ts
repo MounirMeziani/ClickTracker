@@ -11,6 +11,13 @@ import {
   SKINS, 
   ACHIEVEMENTS 
 } from "./gameLogic";
+import {
+  generateMockFriends,
+  generateMotivationalMessage,
+  generateActivityHeatmap,
+  getActivityColor,
+  calculateWeeklyStreak
+} from "./socialSystem";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -370,6 +377,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to complete challenge" });
+    }
+  });
+
+  // Get leaderboard
+  app.get("/api/social/leaderboard", async (req, res) => {
+    try {
+      const leaderboard = await storage.getLeaderboard(20);
+      const currentProfile = await storage.getPlayerProfile();
+      
+      // Add mock friends for demonstration since this is a single-player demo
+      const mockFriends = generateMockFriends();
+      
+      res.json({
+        leaderboard,
+        currentPlayer: currentProfile,
+        friends: mockFriends
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get leaderboard" });
+    }
+  });
+
+  // Get social feed with motivational messages
+  app.get("/api/social/feed", async (req, res) => {
+    try {
+      const mockFriends = generateMockFriends();
+      const motivationalMessage = generateMotivationalMessage();
+      
+      const feed = mockFriends.slice(0, 3).map(friend => ({
+        id: friend.id,
+        type: 'friend_activity',
+        message: `${friend.name} ${friend.recentActivity}`,
+        timestamp: new Date().toISOString(),
+        friend: friend
+      }));
+
+      feed.push({
+        id: 999,
+        type: 'motivational',
+        message: motivationalMessage,
+        timestamp: new Date().toISOString(),
+        friend: null as any
+      });
+
+      res.json(feed);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get social feed" });
+    }
+  });
+
+  // Get activity heatmap (GitHub-style)
+  app.get("/api/social/activity-heatmap", async (req, res) => {
+    try {
+      const profile = await storage.getPlayerProfile();
+      if (!profile) {
+        return res.status(404).json({ message: "Player profile not found" });
+      }
+
+      // Generate realistic activity data based on user's actual activity
+      const activityData = generateActivityHeatmap(365);
+      const weeklyStreak = calculateWeeklyStreak(activityData);
+      
+      res.json({
+        activityData,
+        weeklyStreak,
+        totalContributions: activityData.reduce((sum, day) => sum + day.count, 0),
+        longestStreak: Math.max(weeklyStreak, profile.streakCount)
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get activity data" });
+    }
+  });
+
+  // Get friend comparison
+  app.get("/api/social/friend-comparison/:friendId", async (req, res) => {
+    try {
+      const friendId = parseInt(req.params.friendId);
+      const currentProfile = await storage.getPlayerProfile();
+      const mockFriends = generateMockFriends();
+      const friend = mockFriends.find(f => f.id === friendId);
+      
+      if (!friend || !currentProfile) {
+        return res.status(404).json({ message: "Friend or profile not found" });
+      }
+
+      const comparison = {
+        you: {
+          level: currentProfile.currentLevel,
+          totalShots: currentProfile.totalClicks,
+          achievements: currentProfile.achievements.length,
+          streak: currentProfile.streakCount
+        },
+        friend: {
+          level: friend.level,
+          totalShots: friend.totalShots,
+          achievements: friend.achievements,
+          streak: friend.currentStreak
+        },
+        insights: [
+          currentProfile.totalClicks > friend.totalShots 
+            ? "You're ahead in total shots!" 
+            : "Your friend is leading in total shots!",
+          currentProfile.currentLevel > friend.level
+            ? "You've reached a higher level!"
+            : "Your friend has achieved a higher level!",
+          currentProfile.streakCount > friend.currentStreak
+            ? "You have the longer streak!"
+            : "Your friend has maintained a longer streak!"
+        ]
+      };
+
+      res.json(comparison);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get friend comparison" });
     }
   });
 

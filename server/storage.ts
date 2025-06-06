@@ -3,6 +3,8 @@ import {
   clickRecords, 
   playerProfile, 
   dailyChallenges,
+  friends,
+  dailyActivity,
   type User, 
   type InsertUser, 
   type ClickRecord, 
@@ -11,7 +13,11 @@ import {
   type PlayerProfile,
   type InsertPlayerProfile,
   type DailyChallenge,
-  type InsertDailyChallenge
+  type InsertDailyChallenge,
+  type Friend,
+  type InsertFriend,
+  type DailyActivity,
+  type InsertDailyActivity
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
@@ -37,6 +43,13 @@ export interface IStorage {
   getDailyChallengeByDate(date: string): Promise<DailyChallenge | undefined>;
   createDailyChallenge(challenge: InsertDailyChallenge): Promise<DailyChallenge>;
   getAllDailyChallenges(): Promise<DailyChallenge[]>;
+  
+  // Social features
+  getFriends(userId: number): Promise<Friend[]>;
+  addFriend(friendship: InsertFriend): Promise<Friend>;
+  updateDailyActivity(activity: InsertDailyActivity): Promise<DailyActivity>;
+  getLeaderboard(limit: number): Promise<Array<{profile: PlayerProfile, rank: number}>>;
+  getFriendActivity(friendId: number, days: number): Promise<DailyActivity[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -150,6 +163,72 @@ export class DatabaseStorage implements IStorage {
 
   async getAllDailyChallenges(): Promise<DailyChallenge[]> {
     return await db.select().from(dailyChallenges).orderBy(desc(dailyChallenges.date));
+  }
+
+  async getFriends(userId: number): Promise<Friend[]> {
+    return await db.select().from(friends).where(
+      and(
+        eq(friends.userId, userId),
+        eq(friends.status, "accepted")
+      )
+    );
+  }
+
+  async addFriend(friendship: InsertFriend): Promise<Friend> {
+    const [friend] = await db
+      .insert(friends)
+      .values(friendship)
+      .returning();
+    return friend;
+  }
+
+  async updateDailyActivity(activity: InsertDailyActivity): Promise<DailyActivity> {
+    const existing = await db.select().from(dailyActivity).where(
+      and(
+        eq(dailyActivity.playerId, activity.playerId),
+        eq(dailyActivity.date, activity.date)
+      )
+    );
+
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(dailyActivity)
+        .set(activity)
+        .where(eq(dailyActivity.id, existing[0].id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(dailyActivity)
+        .values(activity)
+        .returning();
+      return created;
+    }
+  }
+
+  async getLeaderboard(limit: number): Promise<Array<{profile: PlayerProfile, rank: number}>> {
+    const profiles = await db.select().from(playerProfile)
+      .orderBy(desc(playerProfile.totalClicks))
+      .limit(limit);
+    
+    return profiles.map((profile, index) => ({
+      profile,
+      rank: index + 1
+    }));
+  }
+
+  async getFriendActivity(friendId: number, days: number): Promise<DailyActivity[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    return await db.select().from(dailyActivity)
+      .where(
+        and(
+          eq(dailyActivity.playerId, friendId),
+          gte(dailyActivity.date, startDate.toISOString().split('T')[0])
+        )
+      )
+      .orderBy(desc(dailyActivity.date));
   }
 }
 

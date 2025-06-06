@@ -40,6 +40,24 @@ export const dailyChallenges = pgTable("daily_challenges", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const friends = pgTable("friends", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  friendId: integer("friend_id").notNull(),
+  status: text("status").notNull().default("pending"), // pending, accepted, blocked
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const dailyActivity = pgTable("daily_activity", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  date: date("date").notNull(),
+  clickCount: integer("click_count").notNull().default(0),
+  sessionsPlayed: integer("sessions_played").notNull().default(0),
+  achievementsUnlocked: integer("achievements_unlocked").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -68,6 +86,20 @@ export const insertDailyChallengeSchema = createInsertSchema(dailyChallenges).pi
   reward: true,
 });
 
+export const insertFriendSchema = createInsertSchema(friends).pick({
+  userId: true,
+  friendId: true,
+  status: true,
+});
+
+export const insertDailyActivitySchema = createInsertSchema(dailyActivity).pick({
+  playerId: true,
+  date: true,
+  clickCount: true,
+  sessionsPlayed: true,
+  achievementsUnlocked: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type ClickRecord = typeof clickRecords.$inferSelect;
@@ -77,3 +109,7 @@ export type PlayerProfile = typeof playerProfile.$inferSelect;
 export type InsertPlayerProfile = z.infer<typeof insertPlayerProfileSchema>;
 export type DailyChallenge = typeof dailyChallenges.$inferSelect;
 export type InsertDailyChallenge = z.infer<typeof insertDailyChallengeSchema>;
+export type Friend = typeof friends.$inferSelect;
+export type InsertFriend = z.infer<typeof insertFriendSchema>;
+export type DailyActivity = typeof dailyActivity.$inferSelect;
+export type InsertDailyActivity = z.infer<typeof insertDailyActivitySchema>;
