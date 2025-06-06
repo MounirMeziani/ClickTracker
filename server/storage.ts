@@ -3,11 +3,9 @@ import {
   clickRecords, 
   playerProfile, 
   dailyChallenges,
-  friends,
-  dailyActivity,
   teams,
   teamMembers,
-  invites,
+  teamActivity,
   type User, 
   type InsertUser, 
   type ClickRecord, 
@@ -17,16 +15,12 @@ import {
   type InsertPlayerProfile,
   type DailyChallenge,
   type InsertDailyChallenge,
-  type Friend,
-  type InsertFriend,
-  type DailyActivity,
-  type InsertDailyActivity,
   type Team,
   type InsertTeam,
   type TeamMember,
   type InsertTeamMember,
-  type Invite,
-  type InsertInvite,
+  type TeamActivity,
+  type InsertTeamActivity
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
