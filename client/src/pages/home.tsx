@@ -19,8 +19,10 @@ import {
   Target,
   Zap,
   Award,
-  Shirt
+  Shirt,
+  Users
 } from "lucide-react";
+import { Link } from "wouter";
 import { useState, useEffect } from "react";
 
 interface TodayData {
@@ -305,6 +307,17 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
+      {/* Navigation */}
+      <nav className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-bold text-text-primary">Basketball Training</h1>
+        <Link href="/social">
+          <Button variant="outline" className="flex items-center gap-2">
+            <Users size={16} />
+            Community
+          </Button>
+        </Link>
+      </nav>
+
       {/* Header */}
       <header className="text-center mb-8">
         <Card className="border-gray-100 bg-gradient-to-r from-orange-50 to-blue-50">

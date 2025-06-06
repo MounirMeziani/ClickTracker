@@ -16,6 +16,8 @@ import {
   Target
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 interface LeaderboardEntry {
   profile: {
@@ -120,6 +122,15 @@ export default function Social() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
+      {/* Navigation */}
+      <nav className="flex justify-between items-center mb-6">
+        <Link href="/">
+          <Button variant="outline" className="flex items-center gap-2">
+            ← Back to Training
+          </Button>
+        </Link>
+      </nav>
+
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary mb-2">
