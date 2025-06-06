@@ -116,13 +116,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePlayerProfile(updates: Partial<PlayerProfile>): Promise<PlayerProfile> {
+    // Get the existing profile first
+    const existingProfile = await this.getPlayerProfile();
+    if (!existingProfile) {
+      throw new Error("Player profile not found");
+    }
+
     const [profile] = await db
       .update(playerProfile)
       .set({ ...updates, updatedAt: new Date() })
+      .where(eq(playerProfile.id, existingProfile.id))
       .returning();
     
     if (!profile) {
-      throw new Error("Player profile not found");
+      throw new Error("Failed to update player profile");
     }
     
     return profile;

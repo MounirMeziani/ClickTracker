@@ -141,19 +141,46 @@ export default function Home() {
     queryKey: ["/api/clicks/last-7-days"],
   });
 
+  const { data: gameData } = useQuery<GameData>({
+    queryKey: ["/api/player/profile"],
+  });
+
+  const { data: dailyChallenge } = useQuery<DailyChallenge>({
+    queryKey: ["/api/challenge/daily"],
+  });
+
   const incrementMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/clicks/increment"),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/today"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/weekly"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/monthly"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/all-time"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/last-7-days"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
+      
+      // Show level up notification
+      if (data.levelUp) {
+        toast({
+          title: "Level Up!",
+          description: `You've reached ${data.profile.levelData?.name || 'a new level'}!`,
+          variant: "default",
+        });
+      }
+
+      // Show new achievements
+      if (data.newAchievements && data.newAchievements.length > 0) {
+        toast({
+          title: "Achievement Unlocked!",
+          description: `${data.newAchievements[data.newAchievements.length - 1]}`,
+          variant: "default",
+        });
+      }
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to record click. Please try again.",
+        description: "Failed to record shot. Please try again.",
         variant: "destructive",
       });
     },
@@ -262,26 +289,73 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
       {/* Header */}
       <header className="text-center mb-8">
-        <Card className="border-gray-100">
+        <Card className="border-gray-100 bg-gradient-to-r from-orange-50 to-blue-50">
           <CardContent className="pt-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
-              <MousePointer className="inline mr-3 text-primary" size={32} />
-              Click Counter
-            </h1>
+            <div className="flex items-center justify-center mb-4">
+              <div 
+                className="w-16 h-16 rounded-full flex items-center justify-center mr-4"
+                style={{ backgroundColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280' }}
+              >
+                <Crown className="text-white" size={32} />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-text-primary">
+                  {gameData?.levelData?.title || "Basketball Training"}
+                </h1>
+                <p className="text-lg text-text-secondary">
+                  {gameData?.levelData?.name || "Rookie"} • Level {gameData?.profile?.currentLevel || 1}
+                </p>
+              </div>
+            </div>
             <div className="text-text-secondary">
-              <p className="text-lg font-medium">
-                {formatDate(currentDate)}
+              <p className="text-sm">
+                {gameData?.levelData?.description || "Just starting your basketball journey"}
               </p>
-              <p className="text-sm mt-1">
-                Day {getDayOfYear(currentDate)} of {currentDate.getFullYear()}
-              </p>
+              {gameData?.nextLevelData && (
+                <div className="mt-3">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>Progress to {gameData.nextLevelData.name}</span>
+                    <span>{gameData.profile.totalClicks} / {gameData.nextLevelData.clicksRequired}</span>
+                  </div>
+                  <Progress 
+                    value={Math.min((gameData.profile.totalClicks / gameData.nextLevelData.clicksRequired) * 100, 100)} 
+                    className="h-2"
+                  />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </header>
+
+      {/* Daily Challenge */}
+      {dailyChallenge && (
+        <section className="mb-8">
+          <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-amber-800">
+                <Target className="mr-2" size={20} />
+                Daily Challenge
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-amber-900">{dailyChallenge.description}</p>
+                  <p className="text-sm text-amber-700 mt-1">Reward: {dailyChallenge.reward}</p>
+                </div>
+                <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                  <Zap className="mr-1" size={12} />
+                  Active
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* Click Section */}
       <section className="text-center mb-8">
@@ -347,115 +421,200 @@ export default function Home() {
 
             {/* Today's Count */}
             <div className="mb-4">
-              <h2 className="text-text-secondary text-lg font-medium mb-2">Today's Clicks</h2>
+              <h2 className="text-text-secondary text-lg font-medium mb-2">Today's Shots</h2>
               <div className="text-5xl md:text-6xl font-bold text-text-primary">
                 {todayData?.clicks || 0}
               </div>
             </div>
 
-            {/* Current Streak */}
-            <div className="inline-flex items-center bg-success/10 text-success px-4 py-2 rounded-full">
-              <Flame className="mr-2" size={16} />
-              <span className="font-medium">
-                {calculateStreak()} day streak
-              </span>
+            {/* Stats Row */}
+            <div className="flex items-center justify-center gap-6 mb-4">
+              {/* Current Streak */}
+              <div className="inline-flex items-center bg-success/10 text-success px-4 py-2 rounded-full">
+                <Flame className="mr-2" size={16} />
+                <span className="font-medium">
+                  {gameData?.profile?.streakCount || 0} day streak
+                </span>
+              </div>
+
+              {/* Total Score */}
+              <div className="inline-flex items-center bg-primary/10 text-primary px-4 py-2 rounded-full">
+                <Star className="mr-2" size={16} />
+                <span className="font-medium">
+                  {gameData?.profile?.totalClicks || 0} career shots
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
       </section>
 
-      {/* Stats Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {/* Weekly Stats Card */}
-        <Card className="border-gray-100">
+      {/* Game Stats Grid */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Weekly Practice */}
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-text-primary">This Week</h3>
-              <div className="bg-primary/10 p-2 rounded-lg">
-                <CalendarDays className="text-primary" size={20} />
+              <h3 className="text-lg font-semibold text-blue-900">Weekly Practice</h3>
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <CalendarDays className="text-blue-600" size={20} />
               </div>
             </div>
             <div className="space-y-3">
-              <div className="text-3xl font-bold text-text-primary">
+              <div className="text-3xl font-bold text-blue-900">
                 {weeklyData?.totalClicks || 0}
               </div>
-              <div className="text-sm text-text-secondary">
-                Total clicks this week
+              <div className="text-sm text-blue-700">
+                Shots this week
               </div>
               <div className="flex items-center text-sm">
-                <span className="text-text-secondary mr-2">Daily average:</span>
-                <span className="font-medium text-text-primary">
+                <span className="text-blue-600 mr-2">Daily average:</span>
+                <span className="font-medium text-blue-900">
                   {weeklyData?.averageClicks || 0}
                 </span>
               </div>
-              <Progress 
-                value={weeklyData ? Math.min((weeklyData.totalClicks / 1000) * 100, 100) : 0} 
-                className="mt-3" 
-              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Monthly Stats Card */}
-        <Card className="border-gray-100">
+        {/* Monthly Training */}
+        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-text-primary">This Month</h3>
-              <div className="bg-secondary/10 p-2 rounded-lg">
-                <Calendar className="text-secondary" size={20} />
+              <h3 className="text-lg font-semibold text-green-900">Monthly Training</h3>
+              <div className="bg-green-100 p-2 rounded-lg">
+                <Calendar className="text-green-600" size={20} />
               </div>
             </div>
             <div className="space-y-3">
-              <div className="text-3xl font-bold text-text-primary">
+              <div className="text-3xl font-bold text-green-900">
                 {monthlyData?.totalClicks || 0}
               </div>
-              <div className="text-sm text-text-secondary">
-                Total clicks this month
+              <div className="text-sm text-green-700">
+                Shots this month
               </div>
               <div className="flex items-center text-sm">
-                <span className="text-text-secondary mr-2">Daily average:</span>
-                <span className="font-medium text-text-primary">
+                <span className="text-green-600 mr-2">Daily average:</span>
+                <span className="font-medium text-green-900">
                   {monthlyData?.averageClicks || 0}
                 </span>
               </div>
-              <Progress 
-                value={monthlyData ? Math.min((monthlyData.totalClicks / 5000) * 100, 100) : 0} 
-                className="mt-3" 
-              />
             </div>
           </CardContent>
         </Card>
 
-        {/* All Time Stats Card */}
-        <Card className="border-gray-100 md:col-span-2 lg:col-span-1">
+        {/* Career Stats */}
+        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-text-primary">All Time</h3>
-              <div className="bg-success/10 p-2 rounded-lg">
-                <Trophy className="text-success" size={20} />
+              <h3 className="text-lg font-semibold text-purple-900">Career Stats</h3>
+              <div className="bg-purple-100 p-2 rounded-lg">
+                <Trophy className="text-purple-600" size={20} />
               </div>
             </div>
             <div className="space-y-3">
-              <div className="text-3xl font-bold text-text-primary">
+              <div className="text-3xl font-bold text-purple-900">
                 {allTimeData?.totalClicks || 0}
               </div>
-              <div className="text-sm text-text-secondary">
-                Total clicks recorded
+              <div className="text-sm text-purple-700">
+                Total career shots
               </div>
-              <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-text-primary">
-                    {allTimeData?.bestDay || 0}
-                  </div>
-                  <div className="text-xs text-text-secondary">Best Day</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-text-primary">
-                    {allTimeData?.daysActive || 0}
-                  </div>
-                  <div className="text-xs text-text-secondary">Days Active</div>
-                </div>
+              <div className="flex items-center text-sm">
+                <span className="text-purple-600 mr-2">Best day:</span>
+                <span className="font-medium text-purple-900">
+                  {allTimeData?.bestDay || 0}
+                </span>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Achievements */}
+        <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-amber-900">Achievements</h3>
+              <div className="bg-amber-100 p-2 rounded-lg">
+                <Award className="text-amber-600" size={20} />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="text-3xl font-bold text-amber-900">
+                {gameData?.achievements?.filter(a => a.unlocked).length || 0}
+              </div>
+              <div className="text-sm text-amber-700">
+                Achievements unlocked
+              </div>
+              <div className="flex items-center text-sm">
+                <span className="text-amber-600 mr-2">Available:</span>
+                <span className="font-medium text-amber-900">
+                  {gameData?.achievements?.length || 0}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Skins & Achievements Section */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Unlocked Skins */}
+        <Card className="border-gray-100">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Shirt className="mr-2" size={20} />
+              Unlocked Uniforms
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3">
+              {gameData?.availableSkins?.filter(skin => skin.unlocked).map((skin) => (
+                <div 
+                  key={skin.id}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    skin.id === gameData.profile.currentSkin 
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  style={{ backgroundColor: `${skin.color}15` }}
+                >
+                  <div 
+                    className="w-8 h-8 rounded-full mx-auto mb-2"
+                    style={{ backgroundColor: skin.color }}
+                  ></div>
+                  <p className="text-xs text-center font-medium">{skin.name}</p>
+                  <p className="text-xs text-center text-text-secondary">{skin.description}</p>
+                </div>
+              )) || []}
+            </div>
+            {(!gameData?.availableSkins?.some(s => s.unlocked) || gameData.availableSkins.filter(s => s.unlocked).length === 0) && (
+              <p className="text-center text-text-secondary">Keep playing to unlock new uniforms!</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Achievements */}
+        <Card className="border-gray-100">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Award className="mr-2" size={20} />
+              Achievements
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {gameData?.achievements?.filter(achievement => achievement.unlocked).slice(0, 6).map((achievement) => (
+                <div key={achievement.id} className="flex items-center gap-3 p-2 bg-green-50 rounded-lg">
+                  <span className="text-2xl">{achievement.icon}</span>
+                  <div>
+                    <p className="font-medium text-green-900">{achievement.name}</p>
+                    <p className="text-sm text-green-700">{achievement.description}</p>
+                  </div>
+                </div>
+              )) || []}
+              {(!gameData?.achievements?.some(a => a.unlocked) || gameData.achievements.filter(a => a.unlocked).length === 0) && (
+                <p className="text-center text-text-secondary">Start playing to unlock achievements!</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -519,7 +678,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="text-center mt-8 text-text-secondary text-sm">
-        <p>Data automatically synced and stored securely</p>
+        <p>Your basketball journey is automatically saved • Keep training to unlock more rewards!</p>
       </footer>
     </div>
   );
