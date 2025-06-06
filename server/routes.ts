@@ -405,21 +405,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mockFriends = generateMockFriends();
       const motivationalMessage = generateMotivationalMessage();
       
-      const feed = mockFriends.slice(0, 3).map(friend => ({
-        id: friend.id,
-        type: 'friend_activity',
-        message: `${friend.name} ${friend.recentActivity}`,
-        timestamp: new Date().toISOString(),
-        friend: friend
-      }));
-
-      feed.push({
-        id: 999,
-        type: 'motivational',
-        message: motivationalMessage,
-        timestamp: new Date().toISOString(),
-        friend: null as any
-      });
+      const feed = [
+        ...mockFriends.slice(0, 3).map(friend => ({
+          id: friend.id,
+          type: 'friend_activity',
+          message: `${friend.name} ${friend.recentActivity}`,
+          timestamp: new Date().toISOString(),
+          friend: friend
+        })),
+        {
+          id: 999,
+          type: 'motivational',
+          message: motivationalMessage,
+          timestamp: new Date().toISOString(),
+          friend: null
+        }
+      ];
 
       res.json(feed);
     } catch (error) {
