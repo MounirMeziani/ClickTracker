@@ -43,7 +43,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (record) {
         record = await storage.updateClickRecord(today, record.clicks + 1);
       } else {
-        record = await storage.createClickRecord({ date: today, clicks: 1 });
+        record = await storage.createClickRecord({ 
+          date: today, 
+          clicks: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          id: 0,
+          playerId: 1
+        });
       }
 
       // Update player profile

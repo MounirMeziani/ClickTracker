@@ -1,23 +1,23 @@
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { 
+  Trophy, 
+  Users, 
+  TrendingUp, 
+  Calendar,
+  Star,
+  Flame,
+  Crown,
+  MessageSquare,
+  BarChart3,
+  Target
+} from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  Users, 
-  Trophy, 
-  MessageSquare, 
-  Star, 
-  Crown, 
-  Calendar, 
-  TrendingUp, 
-  Target, 
-  Flame,
-  Home,
-  BarChart3
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface LeaderboardEntry {
   profile: {
@@ -30,12 +30,24 @@ interface LeaderboardEntry {
   rank: number;
 }
 
+interface Friend {
+  id: number;
+  name: string;
+  level: number;
+  totalShots: number;
+  currentStreak: number;
+  lastActive: string;
+  achievements: number;
+  activityLevel: string;
+  recentActivity: string;
+}
+
 interface FeedItem {
   id: number;
   type: string;
   message: string;
   timestamp: string;
-  playerId: number | null;
+  friend: Friend | null;
 }
 
 interface ActivityData {
@@ -50,6 +62,8 @@ interface ActivityData {
 }
 
 export default function Social() {
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+
   const { data: teamData } = useQuery<{
     hasTeam: boolean;
     currentPlayer: any;
@@ -62,7 +76,7 @@ export default function Social() {
 
   const { data: teamFeed } = useQuery<FeedItem[]>({
     queryKey: ["/api/team/feed"],
-    refetchInterval: 30000,
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: activityData } = useQuery<ActivityData>({
@@ -73,9 +87,9 @@ export default function Social() {
     const colors = [
       '#f0f0f0', // 0 - no activity
       '#c6e48b', // 1 - low activity
-      '#7bc96f', // 2 - medium activity
-      '#239a3b', // 3 - high activity
-      '#196127', // 4 - very high activity
+      '#7bc96f', // 2 - medium activity  
+      '#449d44', // 3 - high activity
+      '#196127'  // 4 - very high activity
     ];
     return colors[Math.min(level, 4)];
   };
@@ -84,11 +98,10 @@ export default function Social() {
     if (!activityData?.activityData) return null;
 
     const weeks = [];
-    const data = activityData.activityData;
+    const data = activityData.activityData.slice(-365); // Last year
     
     for (let i = 0; i < data.length; i += 7) {
-      const week = data.slice(i, i + 7);
-      weeks.push(week);
+      weeks.push(data.slice(i, i + 7));
     }
 
     return (
@@ -110,23 +123,14 @@ export default function Social() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
       {/* Navigation */}
-      <nav className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              <Home className="mr-2" size={16} />
-              Training
-            </Button>
-          </Link>
-          <Link href="/teams">
-            <Button variant="outline" size="sm">
-              <BarChart3 className="mr-2" size={16} />
-              Teams
-            </Button>
-          </Link>
-        </div>
+      <nav className="flex justify-between items-center mb-6">
+        <Link href="/">
+          <Button variant="outline" className="flex items-center gap-2">
+            ← Back to Training
+          </Button>
+        </Link>
       </nav>
 
       {/* Header */}
@@ -143,7 +147,7 @@ export default function Social() {
         </p>
       </header>
 
-      {/* Team Feed */}
+      {/* Social Feed with Motivational Messages */}
       <section className="mb-8">
         <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
           <CardHeader>
@@ -238,29 +242,6 @@ export default function Social() {
                       </div>
                     </div>
                   ))}
-                  
-                  {/* Current Player Position */}
-                  {teamData?.currentPlayer && (
-                    <div className="mt-4 p-3 bg-gradient-to-r from-blue-100 to-cyan-100 border border-blue-200 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-bold text-sm">
-                            YOU
-                          </div>
-                          <div>
-                            <p className="font-medium text-blue-900">Your Position</p>
-                            <p className="text-sm text-blue-700">Level {teamData.currentPlayer.currentLevel}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-blue-900">
-                            {teamData.currentPlayer.totalClicks.toLocaleString()}
-                          </p>
-                          <p className="text-sm text-blue-700">shots</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -272,6 +253,25 @@ export default function Social() {
                   </Button>
                 </div>
               )}
+              
+                <div className="mt-4 p-3 bg-gradient-to-r from-blue-100 to-cyan-100 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-bold text-sm">
+                        YOU
+                      </div>
+                      <div>
+                        <p className="font-medium text-blue-900">Your Position</p>
+                        <p className="text-sm text-blue-700">Level {teamData.currentPlayer.currentLevel}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-blue-900">
+                        {teamData.currentPlayer.totalClicks.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-blue-700">shots</p>
+                    </div>
+                  </div>
             </CardContent>
           </Card>
         </div>
@@ -381,6 +381,177 @@ export default function Social() {
           </CardContent>
         </Card>
       </section>
+    </div>
+  );
+}
+                  <div
+                    key={friend.id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-white border border-green-200 hover:bg-green-50 transition-colors cursor-pointer"
+                    onClick={() => setSelectedFriend(friend)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback className="text-xs">
+                          {friend.name.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm text-gray-900">{friend.name}</p>
+                        <div className="flex items-center gap-1">
+                          <Flame className="text-orange-500" size={12} />
+                          <span className="text-xs text-gray-600">{friend.currentStreak} day streak</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${
+                        friend.activityLevel === 'active' 
+                          ? 'border-green-300 text-green-700' 
+                          : 'border-gray-300 text-gray-600'
+                      }`}
+                    >
+                      {friend.activityLevel}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Activity Heatmap */}
+      <section className="mb-8">
+        <Card className="border-gray-100">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Calendar className="mr-2" size={20} />
+              Training Activity
+              <Badge variant="secondary" className="ml-2">
+                {activityData?.totalContributions || 0} shots this year
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="text-green-600" size={16} />
+                    <span className="text-gray-600">Current streak: {activityData?.weeklyStreak || 0} days</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Target className="text-blue-600" size={16} />
+                    <span className="text-gray-600">Longest streak: {activityData?.longestStreak || 0} days</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span>Less</span>
+                  <div className="flex gap-1">
+                    {[0, 1, 2, 3, 4].map(level => (
+                      <div
+                        key={level}
+                        className="w-3 h-3 rounded-sm border border-gray-200"
+                        style={{ backgroundColor: getActivityColor(level) }}
+                      />
+                    ))}
+                  </div>
+                  <span>More</span>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <div className="min-w-full">
+                  {renderActivityHeatmap()}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Friend Comparison Modal */}
+      {selectedFriend && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Training Comparison</span>
+                <button
+                  onClick={() => setSelectedFriend(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ×
+                </button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-4">
+                  <div className="text-center">
+                    <Avatar className="w-16 h-16 mx-auto mb-2">
+                      <AvatarFallback>YOU</AvatarFallback>
+                    </Avatar>
+                    <p className="font-medium">You</p>
+                    <p className="text-sm text-gray-600">Level {leaderboardData?.currentPlayer?.currentLevel}</p>
+                  </div>
+                  <div className="text-2xl text-gray-400">VS</div>
+                  <div className="text-center">
+                    <Avatar className="w-16 h-16 mx-auto mb-2">
+                      <AvatarFallback>
+                        {selectedFriend.name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="font-medium">{selectedFriend.name}</p>
+                    <p className="text-sm text-gray-600">Level {selectedFriend.level}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Total Shots</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">{leaderboardData?.currentPlayer?.totalClicks || 0}</span>
+                      <span className="font-medium">{selectedFriend.totalShots}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Current Streak</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">{leaderboardData?.currentPlayer?.streakCount || 0} days</span>
+                      <span className="font-medium">{selectedFriend.currentStreak} days</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Achievements</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">{leaderboardData?.currentPlayer?.achievements?.length || 0}</span>
+                      <span className="font-medium">{selectedFriend.achievements}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800 text-center">
+                    {(leaderboardData?.currentPlayer?.totalClicks || 0) > selectedFriend.totalShots
+                      ? "You're ahead in total shots! Keep up the great work!"
+                      : "Your training partner is leading! Time to step up your game!"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
