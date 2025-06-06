@@ -50,6 +50,18 @@ export interface IStorage {
   updateDailyActivity(activity: InsertDailyActivity): Promise<DailyActivity>;
   getLeaderboard(limit: number): Promise<Array<{profile: PlayerProfile, rank: number}>>;
   getFriendActivity(friendId: number, days: number): Promise<DailyActivity[]>;
+  
+  // Team and invite methods
+  createTeam(team: InsertTeam): Promise<Team>;
+  getTeam(teamId: number): Promise<Team | undefined>;
+  getTeamByInviteCode(inviteCode: string): Promise<Team | undefined>;
+  getUserTeams(userId: number): Promise<Team[]>;
+  addTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  getTeamMembers(teamId: number): Promise<TeamMember[]>;
+  createInvite(invite: InsertInvite): Promise<Invite>;
+  getInvite(inviteCode: string): Promise<Invite | undefined>;
+  acceptInvite(inviteCode: string, userId: number): Promise<boolean>;
+  updateTeamMemberCount(teamId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {

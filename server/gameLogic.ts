@@ -1,17 +1,17 @@
 // Basketball career progression system
 export const CAREER_LEVELS = {
-  1: { name: "Rookie", title: "Playground Beginner", clicksRequired: 0, description: "Just starting your basketball journey" },
-  2: { name: "JV Player", title: "Junior Varsity", clicksRequired: 50, description: "Making moves on the JV team" },
-  3: { name: "Varsity Star", title: "High School Hero", clicksRequired: 100, description: "Leading your high school team" },
-  4: { name: "College Recruit", title: "D2 College Player", clicksRequired: 250, description: "Playing at the college level" },
-  5: { name: "D1 Athlete", title: "Division 1 Star", clicksRequired: 400, description: "Competing with the best college players" },
-  6: { name: "Draft Prospect", title: "NBA Draft Prospect", clicksRequired: 600, description: "Scouts are watching your every move" },
-  7: { name: "NBA Rookie", title: "Professional Basketball Player", clicksRequired: 1000, description: "Welcome to the big leagues" },
-  8: { name: "NBA Starter", title: "Starting Five", clicksRequired: 1500, description: "Earning your spot in the starting lineup" },
-  9: { name: "All-Star", title: "NBA All-Star", clicksRequired: 2500, description: "Playing with the league's elite" },
-  10: { name: "Superstar", title: "NBA Superstar", clicksRequired: 4000, description: "One of the best players in the world" },
-  11: { name: "MVP", title: "Most Valuable Player", clicksRequired: 6000, description: "The league's most valuable player" },
-  12: { name: "Legend", title: "Basketball Legend", clicksRequired: 10000, description: "Your name will be remembered forever" }
+  1: { name: "Job Application Level", title: "Playground Beginner", clicksRequired: 0, description: "Just starting your job search journey" },
+  2: { name: "Job Application Level", title: "Junior Varsity Applicant", clicksRequired: 50, description: "Building your application skills" },
+  3: { name: "Job Application Level", title: "Varsity Job Hunter", clicksRequired: 100, description: "Consistently applying to opportunities" },
+  4: { name: "Job Application Level", title: "College Recruit Level", clicksRequired: 250, description: "Targeting quality positions" },
+  5: { name: "Job Application Level", title: "Division 1 Candidate", clicksRequired: 400, description: "Competing for top-tier roles" },
+  6: { name: "Job Application Level", title: "Draft Prospect Status", clicksRequired: 600, description: "Companies are scouting your applications" },
+  7: { name: "Job Application Level", title: "Professional Applicant", clicksRequired: 1000, description: "Master of the application game" },
+  8: { name: "Job Application Level", title: "Starting Lineup", clicksRequired: 1500, description: "First choice for interviews" },
+  9: { name: "Job Application Level", title: "All-Star Applicant", clicksRequired: 2500, description: "Elite job search performance" },
+  10: { name: "Job Application Level", title: "Superstar Candidate", clicksRequired: 4000, description: "One of the best applicants in the market" },
+  11: { name: "Job Application Level", title: "MVP Applicant", clicksRequired: 6000, description: "Most valuable player in job applications" },
+  12: { name: "Job Application Level", title: "Application Legend", clicksRequired: 10000, description: "Your application legacy is secure" }
 };
 
 export const SKINS = {
@@ -30,27 +30,27 @@ export const SKINS = {
 };
 
 export const ACHIEVEMENTS = {
-  firstClick: { name: "First Shot", description: "Made your first click", icon: "🏀" },
-  streak3: { name: "Triple Threat", description: "3-day streak", icon: "🔥" },
-  streak7: { name: "Weekly Warrior", description: "7-day streak", icon: "⚡" },
-  streak30: { name: "Monthly Master", description: "30-day streak", icon: "💎" },
-  hundred: { name: "Century", description: "100 total clicks", icon: "💯" },
-  thousand: { name: "Thousand Club", description: "1,000 total clicks", icon: "🎯" },
-  tenThousand: { name: "Elite Scorer", description: "10,000 total clicks", icon: "👑" },
+  firstClick: { name: "First Application", description: "Submitted your first job application", icon: "🎯" },
+  streak3: { name: "Triple Threat", description: "3-day application streak", icon: "🔥" },
+  streak7: { name: "Weekly Warrior", description: "7-day application streak", icon: "⚡" },
+  streak30: { name: "Monthly Master", description: "30-day application streak", icon: "💎" },
+  hundred: { name: "Century Club", description: "100 total applications", icon: "💯" },
+  thousand: { name: "Thousand Club", description: "1,000 total applications", icon: "🎯" },
+  tenThousand: { name: "Elite Applicant", description: "10,000 total applications", icon: "👑" },
   dailyChamp: { name: "Daily Champion", description: "Complete 10 daily challenges", icon: "🏆" },
-  perfectWeek: { name: "Perfect Week", description: "Complete 7 days in a row", icon: "⭐" },
-  nightOwl: { name: "Night Owl", description: "Click after 10 PM", icon: "🦉" },
-  earlyBird: { name: "Early Bird", description: "Click before 6 AM", icon: "🐦" },
-  speedster: { name: "Speed Demon", description: "100 clicks in one day", icon: "💨" },
-  marathon: { name: "Marathon Runner", description: "500 clicks in one day", icon: "🏃" }
+  perfectWeek: { name: "Perfect Week", description: "Apply 7 days in a row", icon: "⭐" },
+  nightOwl: { name: "Night Owl", description: "Apply after 10 PM", icon: "🦉" },
+  earlyBird: { name: "Early Bird", description: "Apply before 6 AM", icon: "🐦" },
+  speedster: { name: "Speed Demon", description: "100 applications in one day", icon: "💨" },
+  marathon: { name: "Marathon Runner", description: "500 applications in one day", icon: "🏃" }
 };
 
 export const CHALLENGE_TYPES = [
   {
-    type: "daily_clicks",
+    type: "daily_applications",
     generateChallenge: (level: number) => ({
-      targetValue: Math.max(10, level * 5),
-      description: `Score ${Math.max(10, level * 5)} shots today`,
+      targetValue: Math.max(5, level * 2),
+      description: `Submit ${Math.max(5, level * 2)} job applications today`,
       reward: "25 XP + Progress towards next level"
     })
   },
@@ -58,23 +58,23 @@ export const CHALLENGE_TYPES = [
     type: "streak_maintain",
     generateChallenge: () => ({
       targetValue: 1,
-      description: "Maintain your daily streak - don't break the chain!",
+      description: "Maintain your daily application streak - don't break the chain!",
       reward: "Streak bonus + 15 XP"
     })
   },
   {
-    type: "morning_practice",
+    type: "morning_applications",
     generateChallenge: () => ({
-      targetValue: 5,
-      description: "Early morning practice - click 5 times before 8 AM",
+      targetValue: 3,
+      description: "Early morning hustle - submit 3 applications before 8 AM",
       reward: "Early Bird achievement progress + 20 XP"
     })
   },
   {
     type: "consistency",
     generateChallenge: (level: number) => ({
-      targetValue: Math.max(3, Math.floor(level / 2)),
-      description: `Show consistency - click at least ${Math.max(3, Math.floor(level / 2))} times every hour for 3 hours`,
+      targetValue: Math.max(2, Math.floor(level / 2)),
+      description: `Show consistency - apply to at least ${Math.max(2, Math.floor(level / 2))} jobs every 2 hours for 6 hours`,
       reward: "Consistency bonus + 30 XP"
     })
   }
