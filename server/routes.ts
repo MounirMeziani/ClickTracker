@@ -25,157 +25,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const today = new Date().toISOString().split('T')[0];
       const record = await storage.getClickRecordByDate(today);
-      res.json({ clicks: record?.clicks || 0, date: today });
+      res.json({
+        clicks: record?.clicks || 0,
+        date: today
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to get today's clicks" });
     }
   });
 
-  // Increment today's click count with game progression
+  // Increment click count
   app.post("/api/clicks/increment", async (req, res) => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const now = new Date();
-      const hour = now.getHours();
-      const isEarlyMorning = hour >= 5 && hour < 8;
-      const isLateNight = hour >= 22 || hour < 5;
-
-      // Update click record
-      const existingRecord = await storage.getClickRecordByDate(today);
-      let record;
-      if (existingRecord) {
-        record = await storage.updateClickRecord(today, existingRecord.clicks + 1);
+      let record = await storage.getClickRecordByDate(today);
+      
+      if (record) {
+        record = await storage.updateClickRecord(today, record.clicks + 1);
       } else {
         record = await storage.createClickRecord({ date: today, clicks: 1 });
       }
 
-      // Get or create player profile
+      // Update player profile
       let profile = await storage.getPlayerProfile();
-      let oldLevel = 1;
-      let newLevel = 1;
-      let newSkin = "rookie";
-      let newAchievements: string[] = [];
-      let leveledUp = false;
-      let oldSkin = "rookie";
-      
       if (!profile) {
         profile = await storage.createPlayerProfile({
           currentLevel: 1,
           totalClicks: 1,
           currentSkin: "rookie"
         });
-        newLevel = 1;
-        newSkin = "rookie";
-        oldSkin = "rookie";
       } else {
-        // Update total clicks and level
         const newTotalClicks = profile.totalClicks + 1;
-        oldLevel = profile.currentLevel;
-        oldSkin = profile.currentSkin;
-        newLevel = calculateLevel(newTotalClicks);
-        const unlockedSkins = getUnlockedSkins(newLevel);
+        const oldLevel = profile.currentLevel;
+        const newLevel = calculateLevel(newTotalClicks);
+        const levelUp = newLevel > oldLevel;
         
-        // Auto-upgrade skin when reaching new level
-        newSkin = profile.currentSkin;
-        if (newLevel > oldLevel) {
-          // Get the skin that corresponds to the new level
-          const levelSkins = Object.entries(SKINS).filter(([_, skin]) => skin.unlockLevel === newLevel);
-          if (levelSkins.length > 0) {
-            newSkin = levelSkins[0][0]; // Use the first skin for that level
-          }
-        }
-        
+        // Check for skin changes
+        const oldSkins = profile.unlockedSkins;
+        const newSkins = getUnlockedSkins(newLevel);
+        const skinChanged = newSkins.length > oldSkins.length;
+        const newSkin = skinChanged ? newSkins[newSkins.length - 1] : profile.currentSkin;
+
         // Check for new achievements
-        newAchievements = checkAchievements(
-          newTotalClicks,
-          profile.streakCount,
-          record.clicks,
-          profile.achievements,
-          isEarlyMorning,
-          isLateNight,
-          0 // TODO: track daily challenges completed
-        );
+        const oldAchievements = profile.achievements;
+        const newAchievements = checkAchievements(newTotalClicks, record.clicks, profile.streakCount);
+        const achievementUnlocked = newAchievements.length > oldAchievements.length;
+        const unlockedAchievementNames = newAchievements.filter(a => !oldAchievements.includes(a));
 
         profile = await storage.updatePlayerProfile({
           ...profile,
           totalClicks: newTotalClicks,
           currentLevel: newLevel,
           currentSkin: newSkin,
-          unlockedSkins,
-          achievements: [...profile.achievements, ...newAchievements]
+          unlockedSkins: newSkins,
+          achievements: newAchievements
         });
+
+        // Return level up and achievement info
+        res.json({
+          record,
+          profile,
+          levelUp,
+          levelData: levelUp ? CAREER_LEVELS[newLevel] : null,
+          skinChanged,
+          achievementUnlocked,
+          newAchievements: unlockedAchievementNames.map(id => ACHIEVEMENTS[id]?.name || id)
+        });
+        return;
       }
 
-      leveledUp = newLevel > oldLevel;
-      res.json({ 
-        record, 
-        profile,
-        levelUp: leveledUp,
-        skinChanged: newSkin !== oldSkin,
-        newSkin: newSkin,
-        levelData: leveledUp ? CAREER_LEVELS[newLevel as keyof typeof CAREER_LEVELS] : null,
-        newAchievements: newAchievements
-      });
+      res.json({ record, profile });
     } catch (error) {
-      console.error('Increment error:', error);
+      console.error("Increment error:", error);
       res.status(500).json({ message: "Failed to increment clicks" });
     }
   });
 
-  // Decrement today's click count
-  app.post("/api/clicks/decrement", async (req, res) => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const existingRecord = await storage.getClickRecordByDate(today);
-      
-      if (!existingRecord || existingRecord.clicks <= 0) {
-        res.json({ clicks: 0, date: today });
-        return;
-      }
-      
-      const record = await storage.updateClickRecord(today, existingRecord.clicks - 1);
-      res.json(record);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to decrement clicks" });
-    }
-  });
-
-  // Get weekly statistics
+  // Get weekly summary
   app.get("/api/clicks/weekly", async (req, res) => {
     try {
-      const today = new Date();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
-      
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6); // End of current week (Saturday)
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 6);
       
       const records = await storage.getClickRecordsInRange(
-        startOfWeek.toISOString().split('T')[0],
-        endOfWeek.toISOString().split('T')[0]
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
       );
       
       const totalClicks = records.reduce((sum, record) => sum + record.clicks, 0);
-      const daysWithClicks = records.length;
-      const averageClicks = daysWithClicks > 0 ? totalClicks / 7 : 0; // Average over 7 days
+      const daysWithClicks = records.filter(record => record.clicks > 0).length;
       
       res.json({
         totalClicks,
-        averageClicks: Math.round(averageClicks * 10) / 10,
-        daysWithClicks,
-        records
+        averageClicks: totalClicks / 7,
+        daysWithClicks
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to get weekly statistics" });
+      res.status(500).json({ message: "Failed to get weekly summary" });
     }
   });
 
-  // Get monthly statistics
+  // Get monthly summary
   app.get("/api/clicks/monthly", async (req, res) => {
     try {
-      const today = new Date();
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       
       const records = await storage.getClickRecordsInRange(
         startOfMonth.toISOString().split('T')[0],
@@ -183,74 +139,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       const totalClicks = records.reduce((sum, record) => sum + record.clicks, 0);
+      const daysWithClicks = records.filter(record => record.clicks > 0).length;
       const daysInMonth = endOfMonth.getDate();
-      const averageClicks = totalClicks / daysInMonth;
       
       res.json({
         totalClicks,
-        averageClicks: Math.round(averageClicks * 10) / 10,
-        daysWithClicks: records.length,
-        daysInMonth,
-        records
+        averageClicks: totalClicks / daysInMonth,
+        daysWithClicks,
+        daysInMonth
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to get monthly statistics" });
+      res.status(500).json({ message: "Failed to get monthly summary" });
     }
   });
 
-  // Get all-time statistics
+  // Get all-time summary
   app.get("/api/clicks/all-time", async (req, res) => {
     try {
-      const allRecords = await storage.getAllClickRecords();
-      const totalClicks = allRecords.reduce((sum, record) => sum + record.clicks, 0);
-      const daysActive = allRecords.length;
-      const bestDay = allRecords.reduce((max, record) => 
-        record.clicks > max ? record.clicks : max, 0
-      );
+      const records = await storage.getAllClickRecords();
+      const totalClicks = records.reduce((sum, record) => sum + record.clicks, 0);
+      const daysActive = records.filter(record => record.clicks > 0).length;
+      const bestDay = Math.max(...records.map(record => record.clicks), 0);
       
       res.json({
         totalClicks,
         daysActive,
         bestDay,
-        averageClicks: daysActive > 0 ? Math.round((totalClicks / daysActive) * 10) / 10 : 0
+        averageClicks: daysActive > 0 ? totalClicks / daysActive : 0
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to get all-time statistics" });
+      res.status(500).json({ message: "Failed to get all-time summary" });
     }
   });
 
-  // Get last 7 days breakdown
+  // Get last 7 days for chart
   app.get("/api/clicks/last-7-days", async (req, res) => {
     try {
+      const days = [];
       const today = new Date();
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(today.getDate() - 6);
       
-      const records = await storage.getClickRecordsInRange(
-        sevenDaysAgo.toISOString().split('T')[0],
-        today.toISOString().split('T')[0]
-      );
-      
-      // Create array of last 7 days with click counts
-      const last7Days = [];
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
         
-        const record = records.find(r => r.date === dateStr);
-        const clicks = record?.clicks || 0;
+        const record = await storage.getClickRecordByDate(dateStr);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const shortDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         
-        last7Days.push({
+        days.push({
           date: dateStr,
-          clicks,
-          dayName: date.toLocaleDateString('en-US', { weekday: 'long' }),
-          shortDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          clicks: record?.clicks || 0,
+          dayName,
+          shortDate,
           isToday: i === 0
         });
       }
       
-      res.json(last7Days);
+      res.json(days);
     } catch (error) {
       res.status(500).json({ message: "Failed to get last 7 days data" });
     }
@@ -260,6 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/player/profile", async (req, res) => {
     try {
       let profile = await storage.getPlayerProfile();
+      
       if (!profile) {
         profile = await storage.createPlayerProfile({
           currentLevel: 1,
@@ -268,52 +215,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const levelData = CAREER_LEVELS[profile.currentLevel as keyof typeof CAREER_LEVELS];
-      const nextLevelData = CAREER_LEVELS[(profile.currentLevel + 1) as keyof typeof CAREER_LEVELS];
+      const levelData = CAREER_LEVELS[profile.currentLevel];
+      const nextLevelData = CAREER_LEVELS[profile.currentLevel + 1] || null;
       
+      const availableSkins = Object.entries(SKINS).map(([id, skin]) => ({
+        id,
+        ...skin,
+        unlocked: profile.unlockedSkins.includes(id)
+      }));
+
+      const achievements = Object.entries(ACHIEVEMENTS).map(([id, achievement]) => ({
+        id,
+        ...achievement,
+        unlocked: profile.achievements.includes(id)
+      }));
+
       res.json({
         profile,
         levelData,
         nextLevelData,
-        availableSkins: Object.entries(SKINS).map(([key, skin]) => ({
-          id: key,
-          ...skin,
-          unlocked: profile.unlockedSkins.includes(key)
-        })),
-        achievements: Object.entries(ACHIEVEMENTS).map(([key, achievement]) => ({
-          id: key,
-          ...achievement,
-          unlocked: profile.achievements.includes(key)
-        }))
+        availableSkins,
+        achievements
       });
     } catch (error) {
-      console.error('Profile error:', error);
+      console.error("Profile error:", error);
       res.status(500).json({ message: "Failed to get player profile" });
-    }
-  });
-
-  // Update player skin
-  app.post("/api/player/skin", async (req, res) => {
-    try {
-      const { skinId } = req.body;
-      let profile = await storage.getPlayerProfile();
-      
-      if (!profile) {
-        return res.status(404).json({ message: "Player profile not found" });
-      }
-
-      if (!profile.unlockedSkins.includes(skinId)) {
-        return res.status(400).json({ message: "Skin not unlocked" });
-      }
-
-      profile = await storage.updatePlayerProfile({
-        ...profile,
-        currentSkin: skinId
-      });
-
-      res.json(profile);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update skin" });
     }
   });
 
@@ -324,10 +250,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let challenge = await storage.getDailyChallengeByDate(today);
       
       if (!challenge) {
-        // Generate new daily challenge
         const profile = await storage.getPlayerProfile();
-        const level = profile?.currentLevel || 1;
-        const challengeData = generateDailyChallenge(today, level);
+        const challengeData = generateDailyChallenge(today, profile?.currentLevel || 1);
         challenge = await storage.createDailyChallenge(challengeData);
       }
 
@@ -445,7 +369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get activity heatmap (GitHub-style)
-  app.get("/api/social/activity-heatmap", async (req, res) => {
+  app.get("/api/team/activity-heatmap", async (req, res) => {
     try {
       const profile = await storage.getPlayerProfile();
       if (!profile) {
@@ -459,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         activityData,
         weeklyStreak,
-        totalContributions: activityData.reduce((sum, day) => sum + day.count, 0),
+        totalContributions: activityData.reduce((sum: number, day: any) => sum + day.count, 0),
         longestStreak: Math.max(weeklyStreak, profile.streakCount)
       });
     } catch (error) {
@@ -467,137 +391,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get friend comparison
-  app.get("/api/social/friend-comparison/:friendId", async (req, res) => {
-    try {
-      const friendId = parseInt(req.params.friendId);
-      const currentProfile = await storage.getPlayerProfile();
-      const mockFriends = generateMockFriends();
-      const friend = mockFriends.find(f => f.id === friendId);
-      
-      if (!friend || !currentProfile) {
-        return res.status(404).json({ message: "Friend or profile not found" });
-      }
-
-      const comparison = {
-        you: {
-          level: currentProfile.currentLevel,
-          totalShots: currentProfile.totalClicks,
-          achievements: currentProfile.achievements.length,
-          streak: currentProfile.streakCount
-        },
-        friend: {
-          level: friend.level,
-          totalShots: friend.totalShots,
-          achievements: friend.achievements,
-          streak: friend.currentStreak
-        },
-        insights: [
-          currentProfile.totalClicks > friend.totalShots 
-            ? "You're ahead in total shots!" 
-            : "Your friend is leading in total shots!",
-          currentProfile.currentLevel > friend.level
-            ? "You've reached a higher level!"
-            : "Your friend has achieved a higher level!",
-          currentProfile.streakCount > friend.currentStreak
-            ? "You have the longer streak!"
-            : "Your friend has maintained a longer streak!"
-        ]
-      };
-
-      res.json(comparison);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get friend comparison" });
-    }
-  });
-
-  // Team and invite routes
-  app.post('/api/teams', async (req, res) => {
+  // Create a basic team
+  app.post("/api/team/create", async (req, res) => {
     try {
       const { name, description } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Team name is required" });
+      }
+
       const team = await storage.createTeam({
         name,
-        description,
-        ownerId: 1, // For now, use default user
+        description: description || "A basketball training team",
+        maxMembers: 10
       });
-      res.json(team);
+
+      res.json({ team, message: "Team created successfully" });
     } catch (error) {
-      console.error("Error creating team:", error);
       res.status(500).json({ message: "Failed to create team" });
     }
   });
 
-  app.get('/api/teams/user/:userId', async (req, res) => {
+  // Join a team (simple version)
+  app.post("/api/team/join", async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const teams = await storage.getUserTeams(userId);
-      res.json(teams);
-    } catch (error) {
-      console.error("Error fetching user teams:", error);
-      res.status(500).json({ message: "Failed to fetch teams" });
-    }
-  });
-
-  app.get('/api/teams/:teamId', async (req, res) => {
-    try {
-      const teamId = parseInt(req.params.teamId);
-      const team = await storage.getTeam(teamId);
-      if (!team) {
-        return res.status(404).json({ message: "Team not found" });
-      }
-      const members = await storage.getTeamMembers(teamId);
-      res.json({ ...team, members });
-    } catch (error) {
-      console.error("Error fetching team:", error);
-      res.status(500).json({ message: "Failed to fetch team" });
-    }
-  });
-
-  app.post('/api/invites', async (req, res) => {
-    try {
-      const { teamId, inviteeEmail } = req.body;
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+      const { teamId } = req.body;
+      const profile = await storage.getPlayerProfile();
       
-      const invite = await storage.createInvite({
-        teamId,
-        inviterId: 1, // For now, use default user
-        inviteeEmail,
-        expiresAt,
+      if (!profile) {
+        return res.status(404).json({ message: "Player profile not found" });
+      }
+
+      if (profile.teamId) {
+        return res.status(400).json({ message: "Already on a team" });
+      }
+
+      // Join the team
+      await storage.joinTeam(teamId, profile.id);
+      
+      // Update player profile with team ID
+      await storage.updatePlayerProfile({
+        ...profile,
+        teamId: teamId
       });
-      res.json(invite);
-    } catch (error) {
-      console.error("Error creating invite:", error);
-      res.status(500).json({ message: "Failed to create invite" });
-    }
-  });
 
-  app.post('/api/invites/:inviteCode/accept', async (req, res) => {
-    try {
-      const inviteCode = req.params.inviteCode;
-      const success = await storage.acceptInvite(inviteCode, 1); // For now, use default user
-      if (success) {
-        res.json({ message: "Invite accepted successfully" });
-      } else {
-        res.status(400).json({ message: "Invalid or expired invite" });
-      }
+      res.json({ message: "Successfully joined team" });
     } catch (error) {
-      console.error("Error accepting invite:", error);
-      res.status(500).json({ message: "Failed to accept invite" });
-    }
-  });
-
-  app.get('/api/teams/invite/:inviteCode', async (req, res) => {
-    try {
-      const inviteCode = req.params.inviteCode;
-      const team = await storage.getTeamByInviteCode(inviteCode);
-      if (!team) {
-        return res.status(404).json({ message: "Team not found" });
-      }
-      res.json(team);
-    } catch (error) {
-      console.error("Error fetching team by invite code:", error);
-      res.status(500).json({ message: "Failed to fetch team" });
+      res.status(500).json({ message: "Failed to join team" });
     }
   });
 

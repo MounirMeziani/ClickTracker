@@ -64,21 +64,23 @@ interface ActivityData {
 export default function Social() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
 
-  const { data: leaderboardData } = useQuery<{
-    leaderboard: LeaderboardEntry[];
+  const { data: teamData } = useQuery<{
+    hasTeam: boolean;
     currentPlayer: any;
-    friends: Friend[];
+    team: any;
+    teammates: any[];
+    leaderboard: LeaderboardEntry[];
   }>({
-    queryKey: ["/api/social/leaderboard"],
+    queryKey: ["/api/team/info"],
   });
 
-  const { data: socialFeed } = useQuery<FeedItem[]>({
-    queryKey: ["/api/social/feed"],
+  const { data: teamFeed } = useQuery<FeedItem[]>({
+    queryKey: ["/api/team/feed"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: activityData } = useQuery<ActivityData>({
-    queryKey: ["/api/social/activity-heatmap"],
+    queryKey: ["/api/team/activity-heatmap"],
   });
 
   const getActivityColor = (level: number): string => {
@@ -135,10 +137,13 @@ export default function Social() {
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary mb-2">
           <Users className="inline mr-3 text-primary" size={32} />
-          Training Community
+          {teamData?.hasTeam ? `${teamData.team?.name || 'Your Team'}` : 'Team Training'}
         </h1>
         <p className="text-text-secondary">
-          Connect with fellow basketball players and track your progress together
+          {teamData?.hasTeam 
+            ? "Train together and track your team's collective progress"
+            : "Join a team to connect with fellow basketball players and track progress together"
+          }
         </p>
       </header>
 
@@ -153,7 +158,7 @@ export default function Social() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {socialFeed?.map((item) => (
+              {teamFeed?.map((item) => (
                 <div
                   key={item.id}
                   className={`p-3 rounded-lg ${
@@ -163,17 +168,9 @@ export default function Social() {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    {item.friend ? (
-                      <Avatar className="w-8 h-8">
-                        <AvatarFallback className="text-xs">
-                          {item.friend.name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                        <Star className="text-white" size={16} />
-                      </div>
-                    )}
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                      <Star className="text-white" size={16} />
+                    </div>
                     <div className="flex-1">
                       <p className={`text-sm ${
                         item.type === 'motivational' ? 'text-purple-800 font-medium' : 'text-gray-700'
@@ -187,18 +184,6 @@ export default function Social() {
                         })}
                       </p>
                     </div>
-                    {item.friend && (
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs ${
-                          item.friend.activityLevel === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        Level {item.friend.level}
-                      </Badge>
-                    )}
                   </div>
                 </div>
               )) || (
