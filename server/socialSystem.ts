@@ -1,54 +1,54 @@
-// Motivational speech bubbles for social interaction
-export const MOTIVATIONAL_MESSAGES = [
-  // Encouraging messages
-  "Your friend is cheering you on from the sidelines!",
-  "They believe you can reach the next level!",
-  "Someone thinks you're destined for greatness!",
-  "Your training partner is proud of your progress!",
-  "They're excited to see where your journey takes you!",
-  "Your friend knows you have what it takes!",
-  "Someone is inspired by your dedication!",
-  "They're rooting for your success story!",
+// Team-focused motivational messages
+export const TEAM_MOTIVATIONAL_MESSAGES = [
+  // Team encouragement
+  "Your teammate is cheering you on from the sidelines!",
+  "The team believes you can reach the next level!",
+  "Your teammates think you're destined for greatness!",
+  "Your team captain is proud of your progress!",
+  "The whole team is excited to see your growth!",
+  "Your teammates know you have what it takes!",
+  "Someone on the team is inspired by your dedication!",
+  "The team is rooting for your success!",
   
-  // Gentle competitive messages
-  "Your friend just unlocked a new achievement!",
-  "Someone reached a new level today!",
-  "Your training buddy is putting in work too!",
-  "They're also grinding towards their goals!",
-  "Someone else is building their basketball legacy!",
-  "Your friend is making moves on the court!",
-  "They're pushing their limits just like you!",
-  "Someone's streak is looking impressive!",
+  // Team activity messages
+  "A teammate just unlocked a new achievement!",
+  "Someone on your team reached a new level today!",
+  "Your teammate is putting in serious work too!",
+  "The team is grinding towards collective goals!",
+  "Another player is building their basketball legacy!",
+  "Your teammate is making moves on the court!",
+  "The team is pushing their limits together!",
+  "A teammate's streak is looking impressive!",
   
-  // Collaborative messages
-  "Your friend wants to train together!",
-  "They're curious about your current uniform!",
-  "Someone asked about your favorite achievement!",
-  "Your training partner shared a tip with you!",
-  "They suggested a practice session together!",
-  "Your friend recommended a new training routine!",
-  "Someone wants to celebrate your progress!",
-  "They're planning a friendly competition!",
+  // Team collaboration
+  "Your team wants to train together!",
+  "Teammates are sharing training tips!",
+  "Someone asked about team achievements!",
+  "A teammate shared a new training method!",
+  "The team is planning a group session!",
+  "Your teammates recommended new drills!",
+  "The team wants to celebrate progress together!",
+  "Your squad is planning friendly competitions!",
   
-  // Achievement-focused messages
-  "Your friend earned their first achievement!",
-  "Someone just completed their daily challenge!",
-  "They unlocked a rare uniform today!",
-  "Your training buddy hit a major milestone!",
-  "Someone's consistency is paying off!",
-  "They just had their best practice session!",
-  "Your friend discovered a new training method!",
-  "Someone's improvement curve is incredible!",
+  // Team achievements
+  "A teammate earned their first achievement!",
+  "Someone completed their daily team challenge!",
+  "They unlocked a rare team uniform!",
+  "Your teammate hit a major milestone!",
+  "Team consistency is paying off!",
+  "A teammate had their best practice session!",
+  "Someone discovered a new team strategy!",
+  "Your teammate's improvement is incredible!",
   
-  // Supportive messages
-  "Your friend knows everyone improves at their own pace!",
-  "They appreciate your unique training style!",
-  "Someone values your commitment to growth!",
-  "Your friend admires your perseverance!",
-  "They understand that progress isn't always linear!",
-  "Someone celebrates every small victory with you!",
-  "Your training partner respects your journey!",
-  "They know you'll achieve your goals in time!"
+  // Team support
+  "Your team knows everyone improves at their own pace!",
+  "Teammates appreciate each other's unique styles!",
+  "The team values everyone's commitment!",
+  "Your teammates admire your perseverance!",
+  "The team understands progress isn't always linear!",
+  "Your squad celebrates every small victory!",
+  "Teammates respect each other's journey!",
+  "The team knows everyone will achieve their goals!"
 ];
 
 export const ACTIVITY_INSIGHTS = [
@@ -66,37 +66,26 @@ export const ACTIVITY_INSIGHTS = [
   "demonstrated great dedication"
 ];
 
+export function generateTeamMotivationalMessage(): string {
+  return TEAM_MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * TEAM_MOTIVATIONAL_MESSAGES.length)];
+}
+
 export function generateMotivationalMessage(): string {
-  return MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)];
+  return TEAM_MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * TEAM_MOTIVATIONAL_MESSAGES.length)];
 }
 
 export function generateActivityInsight(): string {
   return ACTIVITY_INSIGHTS[Math.floor(Math.random() * ACTIVITY_INSIGHTS.length)];
 }
 
-export function generateFriendlyUpdate(friendName: string): string {
+export function generateTeamUpdate(memberName: string): string {
   const insight = generateActivityInsight();
-  return `${friendName} ${insight}`;
+  return `${memberName} ${insight}`;
 }
 
-// Generate mock friends for demonstration
-export function generateMockFriends() {
-  const names = [
-    "Alex", "Jordan", "Casey", "Morgan", "Riley", "Avery", "Quinn", "Sage",
-    "Rowan", "River", "Phoenix", "Skyler", "Cameron", "Taylor", "Jamie"
-  ];
-  
-  return names.slice(0, 5 + Math.floor(Math.random() * 5)).map((name, index) => ({
-    id: index + 1,
-    name,
-    level: Math.floor(Math.random() * 8) + 1,
-    totalShots: Math.floor(Math.random() * 1000) + 50,
-    currentStreak: Math.floor(Math.random() * 15) + 1,
-    lastActive: `${Math.floor(Math.random() * 7) + 1} days ago`,
-    achievements: Math.floor(Math.random() * 10) + 2,
-    activityLevel: Math.random() > 0.3 ? 'active' : 'moderate',
-    recentActivity: generateActivityInsight()
-  }));
+export function generateMockTeammates() {
+  // Return empty array - teams will be managed through actual database
+  return [];
 }
 
 // Generate GitHub-style activity data

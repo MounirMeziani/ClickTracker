@@ -12,7 +12,6 @@ import {
   ACHIEVEMENTS 
 } from "./gameLogic";
 import {
-  generateMockFriends,
   generateMotivationalMessage,
   generateActivityHeatmap,
   getActivityColor,
@@ -380,51 +379,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get leaderboard
-  app.get("/api/social/leaderboard", async (req, res) => {
+  // Get team info and leaderboard
+  app.get("/api/team/info", async (req, res) => {
     try {
-      const leaderboard = await storage.getLeaderboard(20);
       const currentProfile = await storage.getPlayerProfile();
-      
-      // Add mock friends for demonstration since this is a single-player demo
-      const mockFriends = generateMockFriends();
+      if (!currentProfile?.teamId) {
+        return res.json({
+          hasTeam: false,
+          currentPlayer: currentProfile,
+          team: null,
+          teammates: [],
+          leaderboard: []
+        });
+      }
+
+      const team = await storage.getPlayerTeam(currentProfile.id);
+      const teammates = await storage.getTeamMembers(currentProfile.teamId);
+      const leaderboard = await storage.getTeamLeaderboard(currentProfile.teamId);
       
       res.json({
-        leaderboard,
+        hasTeam: true,
         currentPlayer: currentProfile,
-        friends: mockFriends
+        team,
+        teammates,
+        leaderboard
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to get leaderboard" });
+      res.status(500).json({ message: "Failed to get team info" });
     }
   });
 
-  // Get social feed with motivational messages
-  app.get("/api/social/feed", async (req, res) => {
+  // Get team feed with motivational messages
+  app.get("/api/team/feed", async (req, res) => {
     try {
-      const mockFriends = generateMockFriends();
+      const currentProfile = await storage.getPlayerProfile();
       const motivationalMessage = generateMotivationalMessage();
       
-      const feed = [
-        ...mockFriends.slice(0, 3).map(friend => ({
-          id: friend.id,
-          type: 'friend_activity',
-          message: `${friend.name} ${friend.recentActivity}`,
-          timestamp: new Date().toISOString(),
-          friend: friend
-        })),
-        {
-          id: 999,
-          type: 'motivational',
-          message: motivationalMessage,
-          timestamp: new Date().toISOString(),
-          friend: null
-        }
-      ];
+      const feed = [];
+      
+      // Add team activity if player has a team
+      if (currentProfile?.teamId) {
+        const teamActivity = await storage.getTeamActivity(currentProfile.teamId, 7);
+        feed.push(...teamActivity.slice(0, 3).map(activity => ({
+          id: activity.id,
+          type: 'team_activity',
+          message: activity.description,
+          timestamp: activity.createdAt.toISOString(),
+          playerId: activity.playerId
+        })));
+      }
+
+      // Always add motivational message
+      feed.push({
+        id: 999,
+        type: 'motivational',
+        message: motivationalMessage,
+        timestamp: new Date().toISOString(),
+        playerId: null
+      });
 
       res.json(feed);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get social feed" });
+      res.status(500).json({ message: "Failed to get team feed" });
     }
   });
 
