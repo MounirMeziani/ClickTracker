@@ -1,4 +1,6 @@
 import { users, clickRecords, type User, type InsertUser, type ClickRecord, type InsertClickRecord, type UpdateClickRecord } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, gte, lte, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -13,86 +15,68 @@ export interface IStorage {
   getClickRecordsInRange(startDate: string, endDate: string): Promise<ClickRecord[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private clickRecords: Map<string, ClickRecord>;
-  private currentUserId: number;
-  private currentClickId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.clickRecords = new Map();
-    this.currentUserId = 1;
-    this.currentClickId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async getClickRecordByDate(date: string): Promise<ClickRecord | undefined> {
-    return this.clickRecords.get(date);
+    const [record] = await db.select().from(clickRecords).where(eq(clickRecords.date, date));
+    return record || undefined;
   }
 
   async createClickRecord(insertRecord: InsertClickRecord): Promise<ClickRecord> {
-    const id = this.currentClickId++;
-    const now = new Date();
-    const record: ClickRecord = {
-      id,
-      date: insertRecord.date,
-      clicks: insertRecord.clicks,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.clickRecords.set(insertRecord.date, record);
+    const [record] = await db
+      .insert(clickRecords)
+      .values(insertRecord)
+      .returning();
     return record;
   }
 
   async updateClickRecord(date: string, clicks: number): Promise<ClickRecord> {
-    const existingRecord = this.clickRecords.get(date);
-    if (!existingRecord) {
+    const [record] = await db
+      .update(clickRecords)
+      .set({ clicks, updatedAt: new Date() })
+      .where(eq(clickRecords.date, date))
+      .returning();
+    
+    if (!record) {
       throw new Error(`Click record for date ${date} not found`);
     }
     
-    const updatedRecord: ClickRecord = {
-      ...existingRecord,
-      clicks,
-      updatedAt: new Date(),
-    };
-    this.clickRecords.set(date, updatedRecord);
-    return updatedRecord;
+    return record;
   }
 
   async getAllClickRecords(): Promise<ClickRecord[]> {
-    return Array.from(this.clickRecords.values()).sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+    return await db.select().from(clickRecords).orderBy(desc(clickRecords.date));
   }
 
   async getClickRecordsInRange(startDate: string, endDate: string): Promise<ClickRecord[]> {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    return Array.from(this.clickRecords.values())
-      .filter(record => {
-        const recordDate = new Date(record.date);
-        return recordDate >= start && recordDate <= end;
-      })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return await db
+      .select()
+      .from(clickRecords)
+      .where(
+        and(
+          gte(clickRecords.date, startDate),
+          lte(clickRecords.date, endDate)
+        )
+      )
+      .orderBy(desc(clickRecords.date));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
