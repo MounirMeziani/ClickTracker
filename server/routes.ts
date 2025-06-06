@@ -495,6 +495,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Team and invite routes
+  app.post('/api/teams', async (req, res) => {
+    try {
+      const { name, description } = req.body;
+      const team = await storage.createTeam({
+        name,
+        description,
+        ownerId: 1, // For now, use default user
+      });
+      res.json(team);
+    } catch (error) {
+      console.error("Error creating team:", error);
+      res.status(500).json({ message: "Failed to create team" });
+    }
+  });
+
+  app.get('/api/teams/:teamId', async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      const members = await storage.getTeamMembers(teamId);
+      res.json({ ...team, members });
+    } catch (error) {
+      console.error("Error fetching team:", error);
+      res.status(500).json({ message: "Failed to fetch team" });
+    }
+  });
+
+  app.post('/api/invites', async (req, res) => {
+    try {
+      const { teamId, inviteeEmail } = req.body;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+      
+      const invite = await storage.createInvite({
+        teamId,
+        inviterId: 1, // For now, use default user
+        inviteeEmail,
+        expiresAt,
+      });
+      res.json(invite);
+    } catch (error) {
+      console.error("Error creating invite:", error);
+      res.status(500).json({ message: "Failed to create invite" });
+    }
+  });
+
+  app.post('/api/invites/:inviteCode/accept', async (req, res) => {
+    try {
+      const inviteCode = req.params.inviteCode;
+      const success = await storage.acceptInvite(inviteCode, 1); // For now, use default user
+      if (success) {
+        res.json({ message: "Invite accepted successfully" });
+      } else {
+        res.status(400).json({ message: "Invalid or expired invite" });
+      }
+    } catch (error) {
+      console.error("Error accepting invite:", error);
+      res.status(500).json({ message: "Failed to accept invite" });
+    }
+  });
+
+  app.get('/api/teams/invite/:inviteCode', async (req, res) => {
+    try {
+      const inviteCode = req.params.inviteCode;
+      const team = await storage.getTeamByInviteCode(inviteCode);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      res.json(team);
+    } catch (error) {
+      console.error("Error fetching team by invite code:", error);
+      res.status(500).json({ message: "Failed to fetch team" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
