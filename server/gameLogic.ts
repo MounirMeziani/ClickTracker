@@ -1,17 +1,17 @@
 // Basketball career progression system
 export const CAREER_LEVELS = {
   1: { name: "Rookie", title: "Playground Beginner", clicksRequired: 0, description: "Just starting your basketball journey" },
-  2: { name: "JV Player", title: "Junior Varsity", clicksRequired: 100, description: "Making moves on the JV team" },
-  3: { name: "Varsity Star", title: "High School Hero", clicksRequired: 500, description: "Leading your high school team" },
-  4: { name: "College Recruit", title: "D2 College Player", clicksRequired: 1500, description: "Playing at the college level" },
-  5: { name: "D1 Athlete", title: "Division 1 Star", clicksRequired: 5000, description: "Competing with the best college players" },
-  6: { name: "Draft Prospect", title: "NBA Draft Prospect", clicksRequired: 10000, description: "Scouts are watching your every move" },
-  7: { name: "NBA Rookie", title: "Professional Basketball Player", clicksRequired: 20000, description: "Welcome to the big leagues" },
-  8: { name: "NBA Starter", title: "Starting Five", clicksRequired: 40000, description: "Earning your spot in the starting lineup" },
-  9: { name: "All-Star", title: "NBA All-Star", clicksRequired: 80000, description: "Playing with the league's elite" },
-  10: { name: "Superstar", title: "NBA Superstar", clicksRequired: 150000, description: "One of the best players in the world" },
-  11: { name: "MVP", title: "Most Valuable Player", clicksRequired: 250000, description: "The league's most valuable player" },
-  12: { name: "Legend", title: "Basketball Legend", clicksRequired: 500000, description: "Your name will be remembered forever" }
+  2: { name: "JV Player", title: "Junior Varsity", clicksRequired: 50, description: "Making moves on the JV team" },
+  3: { name: "Varsity Star", title: "High School Hero", clicksRequired: 100, description: "Leading your high school team" },
+  4: { name: "College Recruit", title: "D2 College Player", clicksRequired: 250, description: "Playing at the college level" },
+  5: { name: "D1 Athlete", title: "Division 1 Star", clicksRequired: 400, description: "Competing with the best college players" },
+  6: { name: "Draft Prospect", title: "NBA Draft Prospect", clicksRequired: 600, description: "Scouts are watching your every move" },
+  7: { name: "NBA Rookie", title: "Professional Basketball Player", clicksRequired: 1000, description: "Welcome to the big leagues" },
+  8: { name: "NBA Starter", title: "Starting Five", clicksRequired: 1500, description: "Earning your spot in the starting lineup" },
+  9: { name: "All-Star", title: "NBA All-Star", clicksRequired: 2500, description: "Playing with the league's elite" },
+  10: { name: "Superstar", title: "NBA Superstar", clicksRequired: 4000, description: "One of the best players in the world" },
+  11: { name: "MVP", title: "Most Valuable Player", clicksRequired: 6000, description: "The league's most valuable player" },
+  12: { name: "Legend", title: "Basketball Legend", clicksRequired: 10000, description: "Your name will be remembered forever" }
 };
 
 export const SKINS = {
