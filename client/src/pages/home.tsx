@@ -160,21 +160,36 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
       
       // Show level up notification
-      if (data.levelUp) {
+      if (data.levelUp && data.levelData) {
         toast({
-          title: "Level Up!",
-          description: `You've reached ${data.profile.levelData?.name || 'a new level'}!`,
+          title: "🏀 LEVEL UP!",
+          description: `Welcome to ${data.levelData.title}! You're now a ${data.levelData.name}!`,
+          variant: "default",
+        });
+      }
+
+      // Show skin change notification
+      if (data.skinChanged) {
+        toast({
+          title: "👕 New Uniform Unlocked!",
+          description: `You've upgraded to a new uniform! Check out your new look.`,
           variant: "default",
         });
       }
 
       // Show new achievements
       if (data.newAchievements && data.newAchievements.length > 0) {
-        toast({
-          title: "Achievement Unlocked!",
-          description: `${data.newAchievements[data.newAchievements.length - 1]}`,
-          variant: "default",
-        });
+        setTimeout(() => {
+          data.newAchievements.forEach((achievement: string, index: number) => {
+            setTimeout(() => {
+              toast({
+                title: "🏆 Achievement Unlocked!",
+                description: achievement,
+                variant: "default",
+              });
+            }, index * 1500);
+          });
+        }, 1000);
       }
     },
     onError: () => {
@@ -296,10 +311,13 @@ export default function Home() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-center mb-4">
               <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center mr-4"
-                style={{ backgroundColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280' }}
+                className="w-20 h-20 rounded-full flex items-center justify-center mr-4 shadow-lg border-4 border-white transition-all duration-500 hover:scale-105"
+                style={{ 
+                  backgroundColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280',
+                  boxShadow: `0 0 20px ${gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280'}40`
+                }}
               >
-                <Crown className="text-white" size={32} />
+                <Crown className="text-white drop-shadow-lg" size={36} />
               </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-text-primary">
@@ -308,6 +326,15 @@ export default function Home() {
                 <p className="text-lg text-text-secondary">
                   {gameData?.levelData?.name || "Rookie"} • Level {gameData?.profile?.currentLevel || 1}
                 </p>
+                <div className="flex items-center mt-1">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2 border border-white"
+                    style={{ backgroundColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280' }}
+                  ></div>
+                  <span className="text-sm text-text-secondary">
+                    {gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.name || "Rookie Uniform"}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="text-text-secondary">
@@ -385,22 +412,28 @@ export default function Home() {
                     onClick={handleIncrement}
                     onKeyDown={handleKeyDown}
                     disabled={incrementMutation.isPending}
-                    className={`w-36 h-36 md:w-44 md:h-44 bg-gradient-to-br from-primary to-primary-dark text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/30 relative overflow-hidden touch-manipulation ${
+                    className={`w-36 h-36 md:w-44 md:h-44 text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 focus:outline-none relative overflow-hidden touch-manipulation ${
                       isAnimating ? 'scale-95' : ''
                     } ${incrementMutation.isPending ? 'opacity-50' : ''}`}
                     style={{ 
-                      background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(207 90% 45%))',
-                      transition: 'all 0.2s ease-in-out'
+                      background: `linear-gradient(135deg, ${gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#1976D2'}, ${gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#1565C0'}DD)`,
+                      boxShadow: `0 20px 40px ${gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#1976D2'}30, 0 0 30px ${gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#1976D2'}20`,
+                      transition: 'all 0.3s ease-in-out',
+                      border: `3px solid ${gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#1976D2'}80`
                     }}
                   >
                     <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
-                    <MousePointer className="relative z-10" size={52} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-full"></div>
+                    <MousePointer className="relative z-10 drop-shadow-lg" size={52} />
                   </Button>
                   {isAnimating && (
-                    <div className="absolute inset-0 border-4 border-primary rounded-full animate-ping opacity-75"></div>
+                    <div 
+                      className="absolute inset-0 border-4 rounded-full animate-ping opacity-75"
+                      style={{ borderColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#1976D2' }}
+                    ></div>
                   )}
                 </div>
-                <span className="text-sm text-text-secondary font-medium">Tap to Count</span>
+                <span className="text-sm text-text-secondary font-medium">Shoot the Ball</span>
               </div>
 
               {/* Increase Button */}

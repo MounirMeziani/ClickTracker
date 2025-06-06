@@ -45,20 +45,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get or create player profile
       let profile = await storage.getPlayerProfile();
+      let oldLevel = 1;
+      let newLevel = 1;
+      let newSkin = "rookie";
+      let newAchievements: string[] = [];
+      let leveledUp = false;
+      let oldSkin = "rookie";
+      
       if (!profile) {
         profile = await storage.createPlayerProfile({
           currentLevel: 1,
           totalClicks: 1,
           currentSkin: "rookie"
         });
+        newLevel = 1;
+        newSkin = "rookie";
+        oldSkin = "rookie";
       } else {
         // Update total clicks and level
         const newTotalClicks = profile.totalClicks + 1;
-        const newLevel = calculateLevel(newTotalClicks);
+        oldLevel = profile.currentLevel;
+        oldSkin = profile.currentSkin;
+        newLevel = calculateLevel(newTotalClicks);
         const unlockedSkins = getUnlockedSkins(newLevel);
         
+        // Auto-upgrade skin when reaching new level
+        newSkin = profile.currentSkin;
+        if (newLevel > oldLevel) {
+          // Get the skin that corresponds to the new level
+          const levelSkins = Object.entries(SKINS).filter(([_, skin]) => skin.unlockLevel === newLevel);
+          if (levelSkins.length > 0) {
+            newSkin = levelSkins[0][0]; // Use the first skin for that level
+          }
+        }
+        
         // Check for new achievements
-        const newAchievements = checkAchievements(
+        newAchievements = checkAchievements(
           newTotalClicks,
           profile.streakCount,
           record.clicks,
@@ -72,16 +94,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...profile,
           totalClicks: newTotalClicks,
           currentLevel: newLevel,
+          currentSkin: newSkin,
           unlockedSkins,
           achievements: [...profile.achievements, ...newAchievements]
         });
       }
 
+      leveledUp = newLevel > oldLevel;
       res.json({ 
         record, 
         profile,
-        levelUp: profile.currentLevel > (profile.totalClicks - 1 ? calculateLevel(profile.totalClicks - 1) : 1),
-        newAchievements: profile.achievements.slice(-3) // Return last 3 achievements
+        levelUp: leveledUp,
+        skinChanged: newSkin !== oldSkin,
+        newSkin: newSkin,
+        levelData: leveledUp ? CAREER_LEVELS[newLevel as keyof typeof CAREER_LEVELS] : null,
+        newAchievements: newAchievements
       });
     } catch (error) {
       console.error('Increment error:', error);
