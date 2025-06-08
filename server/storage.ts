@@ -200,7 +200,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGoalClickRecord(record: InsertGoalClickRecord): Promise<GoalClickRecord> {
-    const [newRecord] = await db.insert(goalClickRecords).values(record).returning();
+    const [newRecord] = await db.insert(goalClickRecords).values({
+      ...record,
+      playerId: 1 // Hardcoded for single-player mode
+    }).returning();
     return newRecord;
   }
 

@@ -88,6 +88,7 @@ export const goals = pgTable("goals", {
 
 export const goalClickRecords = pgTable("goal_click_records", {
   id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
   goalId: integer("goal_id").notNull().references(() => goals.id, { onDelete: "cascade" }),
   date: varchar("date", { length: 10 }).notNull(),
   clicks: integer("clicks").default(0),
