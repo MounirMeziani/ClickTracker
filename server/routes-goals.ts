@@ -286,4 +286,42 @@ export function registerGoalRoutes(app: Express) {
       res.status(500).json({ message: "Failed to get today's goal clicks" });
     }
   });
+
+  // Get last 7 days for active goal
+  app.get("/api/goals/active/last-7-days", async (req, res) => {
+    try {
+      const activeGoal = await storage.getActiveGoal(PLAYER_ID);
+      
+      if (!activeGoal) {
+        return res.json([]);
+      }
+
+      const last7DaysData = [];
+      const today = new Date();
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateString = date.toISOString().split('T')[0];
+        
+        const goalClickRecord = await storage.getGoalClickRecord(activeGoal.id, dateString);
+        
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const isToday = i === 0;
+        
+        last7DaysData.push({
+          date: dateString,
+          clicks: goalClickRecord?.clicks || 0,
+          dayName: dayNames[date.getDay()],
+          shortDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          isToday
+        });
+      }
+      
+      res.json(last7DaysData);
+    } catch (error) {
+      console.error("Error fetching active goal last 7 days:", error);
+      res.status(500).json({ message: "Failed to fetch goal last 7 days data" });
+    }
+  });
 }

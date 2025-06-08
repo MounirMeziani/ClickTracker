@@ -190,6 +190,7 @@ export default function Home() {
   const { data: goalLast7DaysData } = useQuery<DayData[]>({
     queryKey: ["/api/goals/active/last-7-days"],
     enabled: !!activeGoal && !showAllGoalsData,
+    refetchOnMount: "always",
   });
 
   const incrementMutation = useMutation({
@@ -848,16 +849,31 @@ export default function Home() {
         <Card className="border-gray-100">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-text-primary">Last 7 Days</h3>
-              <div className="bg-primary/10 p-2 rounded-lg">
-                <BarChart3 className="text-primary" size={20} />
+              <h3 className="text-xl font-semibold text-text-primary">
+                Last 7 Days {currentGoal && !showAllGoalsData ? `- ${currentGoal.name}` : ''}
+              </h3>
+              <div className="flex items-center gap-2">
+                {currentGoal && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllGoalsData(!showAllGoalsData)}
+                    className="text-xs"
+                  >
+                    {showAllGoalsData ? `Show ${currentGoal.name}` : 'Show All Goals'}
+                  </Button>
+                )}
+                <div className="bg-primary/10 p-2 rounded-lg">
+                  <BarChart3 className="text-primary" size={20} />
+                </div>
               </div>
             </div>
             
-            {last7DaysData && (
+            {(showAllGoalsData ? last7DaysData : (goalLast7DaysData || last7DaysData)) && (
               <div className="space-y-3">
-                {last7DaysData.map((day, index) => {
-                  const maxClicks = getMaxClicks();
+                {(showAllGoalsData ? last7DaysData : (goalLast7DaysData || last7DaysData)).map((day, index) => {
+                  const dataToUse = showAllGoalsData ? last7DaysData : (goalLast7DaysData || last7DaysData);
+                  const maxClicks = Math.max(...(dataToUse?.map(d => d.clicks) || [0]), 1);
                   const percentage = maxClicks > 0 ? (day.clicks / maxClicks) * 100 : 0;
                   
                   return (
