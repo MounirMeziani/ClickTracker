@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         totalClicks,
-        averageClicks: totalClicks / 7,
+        averageClicks: Math.round((totalClicks / 7) * 10) / 10,
         daysWithClicks
       });
     } catch (error) {
@@ -147,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         totalClicks,
-        averageClicks: totalClicks / daysInMonth,
+        averageClicks: Math.round((totalClicks / daysInMonth) * 10) / 10,
         daysWithClicks,
         daysInMonth
       });
@@ -168,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalClicks,
         daysActive,
         bestDay,
-        averageClicks: daysActive > 0 ? totalClicks / daysActive : 0
+        averageClicks: daysActive > 0 ? Math.round((totalClicks / daysActive) * 10) / 10 : 0
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to get all-time summary" });
