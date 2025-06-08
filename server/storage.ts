@@ -54,6 +54,20 @@ export interface IStorage {
   createTeam(team: InsertTeam): Promise<Team>;
   joinTeam(teamId: number, playerId: number): Promise<TeamMember>;
   getTeamLeaderboard(teamId: number): Promise<Array<{profile: PlayerProfile, rank: number}>>;
+  
+  // Goal management
+  getAllGoals(): Promise<Goal[]>;
+  createGoal(goal: InsertGoal): Promise<Goal>;
+  getPlayerGoals(playerId: number): Promise<PlayerGoal[]>;
+  getPlayerGoal(playerId: number, goalId: number): Promise<PlayerGoal | undefined>;
+  createPlayerGoal(playerGoal: InsertPlayerGoal): Promise<PlayerGoal>;
+  updatePlayerGoal(id: number, updates: Partial<PlayerGoal>): Promise<PlayerGoal>;
+  
+  // Goal click tracking
+  getGoalClickRecord(playerId: number, goalId: number, date: string): Promise<GoalClickRecord | undefined>;
+  createGoalClickRecord(record: InsertGoalClickRecord): Promise<GoalClickRecord>;
+  updateGoalClickRecord(id: number, clicks: number): Promise<GoalClickRecord>;
+  getGoalClickRecords(playerId: number, goalId: number, startDate: string, endDate: string): Promise<GoalClickRecord[]>;
 }
 
 export class DatabaseStorage implements IStorage {

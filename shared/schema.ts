@@ -70,6 +70,44 @@ export const teamActivity = pgTable("team_activity", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const goals = pgTable("goals", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull(),
+  maxLevel: integer("max_level").default(12),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const playerGoals = pgTable("player_goals", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  goalId: integer("goal_id").notNull().references(() => goals.id),
+  currentLevel: integer("current_level").default(1),
+  totalClicks: integer("total_clicks").default(0),
+  currentSkin: varchar("current_skin", { length: 50 }).default("rookie"),
+  unlockedSkins: text("unlocked_skins").array().default([]),
+  achievements: text("achievements").array().default([]),
+  streakCount: integer("streak_count").default(0),
+  dailyChallengeCompleted: boolean("daily_challenge_completed").default(false),
+  lastChallengeDate: varchar("last_challenge_date"),
+  lastActivityDate: varchar("last_activity_date"),
+  weeklyTarget: integer("weekly_target").default(0),
+  levelPoints: integer("level_points").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const goalClickRecords = pgTable("goal_click_records", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  goalId: integer("goal_id").notNull().references(() => goals.id),
+  date: varchar("date", { length: 10 }).notNull(),
+  clicks: integer("clicks").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -120,6 +158,36 @@ export const insertTeamActivitySchema = createInsertSchema(teamActivity).pick({
   date: true,
 });
 
+export const insertGoalSchema = createInsertSchema(goals).pick({
+  name: true,
+  description: true,
+  category: true,
+  maxLevel: true,
+});
+
+export const insertPlayerGoalSchema = createInsertSchema(playerGoals).pick({
+  playerId: true,
+  goalId: true,
+  currentLevel: true,
+  totalClicks: true,
+  currentSkin: true,
+  unlockedSkins: true,
+  achievements: true,
+  streakCount: true,
+  dailyChallengeCompleted: true,
+  lastChallengeDate: true,
+  lastActivityDate: true,
+  weeklyTarget: true,
+  levelPoints: true,
+});
+
+export const insertGoalClickRecordSchema = createInsertSchema(goalClickRecords).pick({
+  playerId: true,
+  goalId: true,
+  date: true,
+  clicks: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -136,3 +204,9 @@ export type TeamMember = typeof teamMembers.$inferSelect;
 export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
 export type TeamActivity = typeof teamActivity.$inferSelect;
 export type InsertTeamActivity = z.infer<typeof insertTeamActivitySchema>;
+export type Goal = typeof goals.$inferSelect;
+export type InsertGoal = z.infer<typeof insertGoalSchema>;
+export type PlayerGoal = typeof playerGoals.$inferSelect;
+export type InsertPlayerGoal = z.infer<typeof insertPlayerGoalSchema>;
+export type GoalClickRecord = typeof goalClickRecords.$inferSelect;
+export type InsertGoalClickRecord = z.infer<typeof insertGoalClickRecordSchema>;
