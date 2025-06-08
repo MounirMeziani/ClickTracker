@@ -41,8 +41,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Increment click count
   app.post("/api/clicks/increment", async (req, res) => {
     try {
+      console.log("=== GENERAL CLICK INCREMENT START ===");
       const today = new Date().toISOString().split('T')[0];
+      console.log("Date:", today);
       let record = await storage.getClickRecordByDate(today);
+      console.log("Current click record:", record);
       
       if (record) {
         record = await storage.updateClickRecord(today, record.clicks + 1);

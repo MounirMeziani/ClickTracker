@@ -183,23 +183,42 @@ export function registerGoalRoutes(app: Express) {
   // Decrement goal-specific click
   app.post("/api/goals/:goalId/decrement", async (req, res) => {
     try {
+      console.log("=== GOAL CLICK DECREMENT START ===");
       const goalId = parseInt(req.params.goalId);
       const today = new Date().toISOString().split('T')[0];
+      console.log("Goal ID:", goalId);
+      console.log("Date:", today);
+      console.log("Request params:", req.params);
 
       // Decrement goal-specific click record
       let goalClickRecord = await storage.getGoalClickRecord(1, goalId, today);
+      console.log("Current goal click record:", goalClickRecord);
       
-      if (goalClickRecord && goalClickRecord.clicks > 0) {
-        goalClickRecord = await storage.updateGoalClickRecord(goalClickRecord.id, goalClickRecord.clicks - 1);
+      if (goalClickRecord && (goalClickRecord.clicks || 0) > 0) {
+        const newClicks = (goalClickRecord.clicks || 0) - 1;
+        console.log("Updating goal click record from", goalClickRecord.clicks, "to", newClicks);
+        goalClickRecord = await storage.updateGoalClickRecord(goalClickRecord.id, newClicks);
+        console.log("Updated goal click record:", goalClickRecord);
+      } else {
+        console.log("No goal click record to decrement or already at 0");
       }
 
       // Update player goal progress (decrease points and possibly level)
       const playerGoal = await storage.getPlayerGoal(1, goalId);
-      if (playerGoal && playerGoal.totalClicks > 0) {
+      console.log("Current player goal:", playerGoal);
+      if (playerGoal && (playerGoal.totalClicks || 0) > 0) {
+        const newTotalClicks = Math.max(0, (playerGoal.totalClicks || 0) - 1);
+        const newLevelPoints = Math.max(0, (playerGoal.levelPoints || 0) - 1);
+        console.log("Updating player goal from", playerGoal.totalClicks, "to", newTotalClicks);
+        console.log("Updating level points from", playerGoal.levelPoints, "to", newLevelPoints);
+        
         await storage.updatePlayerGoal(playerGoal.id, {
-          totalClicks: Math.max(0, playerGoal.totalClicks - 1),
-          levelPoints: Math.max(0, playerGoal.levelPoints - 1)
+          totalClicks: newTotalClicks,
+          levelPoints: newLevelPoints
         });
+        console.log("Player goal updated successfully");
+      } else {
+        console.log("No player goal to decrement or already at 0");
       }
 
       // Decrement overall daily clicks for home counter

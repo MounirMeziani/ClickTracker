@@ -165,10 +165,19 @@ export default function Home() {
 
   const incrementMutation = useMutation({
     mutationFn: () => {
+      console.log("=== HOME INCREMENT MUTATION START ===");
+      console.log("Active goal:", activeGoal);
+      console.log("Player goals:", playerGoals);
+      
       // Use goal-specific endpoint if there's an active goal
       if (activeGoal?.goalId) {
-        return fetch(`/api/goals/${activeGoal.goalId}/click`, { method: "POST" }).then(res => res.json());
+        console.log("Using goal-specific endpoint for goal ID:", activeGoal.goalId);
+        return fetch(`/api/goals/${activeGoal.goalId}/click`, { method: "POST" }).then(res => {
+          console.log("Goal-specific response status:", res.status);
+          return res.json();
+        });
       }
+      console.log("Using general click increment endpoint");
       return apiRequest("POST", "/api/clicks/increment");
     },
     onSuccess: (data: any) => {
@@ -225,10 +234,19 @@ export default function Home() {
 
   const decrementMutation = useMutation({
     mutationFn: () => {
+      console.log("=== HOME DECREMENT MUTATION START ===");
+      console.log("Active goal:", activeGoal);
+      console.log("Player goals:", playerGoals);
+      
       // Use goal-specific endpoint if there's an active goal
       if (activeGoal?.goalId) {
-        return fetch(`/api/goals/${activeGoal.goalId}/decrement`, { method: "POST" }).then(res => res.json());
+        console.log("Using goal-specific decrement endpoint for goal ID:", activeGoal.goalId);
+        return fetch(`/api/goals/${activeGoal.goalId}/decrement`, { method: "POST" }).then(res => {
+          console.log("Goal-specific decrement response status:", res.status);
+          return res.json();
+        });
       }
+      console.log("Using general click decrement endpoint");
       return apiRequest("POST", "/api/clicks/decrement");
     },
     onSuccess: () => {
