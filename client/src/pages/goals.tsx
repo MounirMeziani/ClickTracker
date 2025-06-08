@@ -175,6 +175,27 @@ export default function Goals() {
     }
   };
 
+  const createGoalMutation = useMutation({
+    mutationFn: async ({ name, description, category }: { name: string; description: string; category: string }) => {
+      return await apiRequest("POST", "/api/goals", { name, description, category });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
+      toast({
+        title: "Goal Created",
+        description: "New goal has been created successfully!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Creation Failed",
+        description: "Failed to create new goal. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const selectedGoal = playerGoals?.find(pg => pg.goalId === selectedGoalId);
 
   const getCategoryIcon = (category: string) => {
