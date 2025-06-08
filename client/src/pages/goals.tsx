@@ -349,8 +349,8 @@ export default function Goals() {
                                   day.isToday ? "bg-blue-500" : "bg-gray-300"
                                 }`}
                                 style={{ 
-                                  height: `${Math.max((day.clicks / Math.max(...goalStats.dailyData.map(d => d.clicks), 1)) * 100, 4)}%`,
-                                  minHeight: day.clicks > 0 ? "8px" : "2px"
+                                  height: `${Math.max((day.clicks / Math.max(...goalStats.dailyData.map(d => d.clicks || 0), 1)) * 100, 4)}%`,
+                                  minHeight: (day.clicks || 0) > 0 ? "8px" : "2px"
                                 }}
                                 title={`${day.dayName}: ${day.clicks} clicks`}
                               />

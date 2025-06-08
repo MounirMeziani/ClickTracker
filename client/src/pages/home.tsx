@@ -311,6 +311,12 @@ export default function Home() {
       <nav className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-text-primary">Job Application Tracker</h1>
         <div className="flex gap-2">
+          <Link href="/goals">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Target size={16} />
+              Goals
+            </Button>
+          </Link>
           <Link href="/social">
             <Button variant="outline" className="flex items-center gap-2">
               <Users size={16} />
@@ -378,6 +384,48 @@ export default function Home() {
           </CardContent>
         </Card>
       </header>
+
+      {/* Training Goal Selection */}
+      <section className="mb-8">
+        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-blue-800">
+              <Target className="mr-2" size={20} />
+              Current Training Goal
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold text-lg">🏀 Free Throw Shooting</h3>
+                    <p className="text-sm text-gray-600">Master your free throw technique and consistency</p>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-800">Level {gameData?.profile?.currentLevel || 1}</Badge>
+                </div>
+                <div className="text-sm text-gray-600 mb-2">
+                  Weekly Target: 5 shots • Progress: {(todayData?.clicks || 0)} / 5
+                </div>
+                <Progress 
+                  value={Math.min(((todayData?.clicks || 0) / 5) * 100, 100)} 
+                  className="h-2 mb-3"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Link href="/goals">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Switch Goal
+                  </Button>
+                </Link>
+                <Button variant="outline" size="sm" className="w-full">
+                  View Progress
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Daily Challenge */}
       {dailyChallenge && (
