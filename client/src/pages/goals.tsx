@@ -79,7 +79,7 @@ export default function Goals() {
     enabled: !!selectedGoalId,
   });
 
-  const clickMutation = useMutation({
+  const trainMutation = useMutation({
     mutationFn: async (goalId: number) => {
       const response = await fetch(`/api/goals/${goalId}/click`, { method: "POST" });
       if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
@@ -87,6 +87,11 @@ export default function Goals() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/weekly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/monthly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/all-time"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
       if (selectedGoalId) {
         queryClient.invalidateQueries({ queryKey: ["/api/goals", selectedGoalId, "stats"] });
       }
@@ -220,12 +225,12 @@ export default function Goals() {
               {selectedGoalId && (
                 <div className="mt-4 space-y-2">
                   <Button
-                    onClick={() => selectedGoalId && clickMutation.mutate(selectedGoalId)}
-                    disabled={clickMutation.isPending || !selectedGoalId}
+                    onClick={() => selectedGoalId && trainMutation.mutate(selectedGoalId)}
+                    disabled={trainMutation.isPending || !selectedGoalId}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                   >
                     <Activity className="mr-2" size={16} />
-                    {clickMutation.isPending ? "Training..." : "Train Now"}
+                    {trainMutation.isPending ? "Training..." : "Train Now"}
                   </Button>
                   
                   <Button

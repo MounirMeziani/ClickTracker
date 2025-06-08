@@ -112,7 +112,7 @@ export function registerGoalRoutes(app: Express) {
       let record = await storage.getGoalClickRecord(playerId, goalId, today);
       
       if (record) {
-        record = await storage.updateGoalClickRecord(record.id, record.clicks + 1);
+        record = await storage.updateGoalClickRecord(record.id, (record.clicks || 0) + 1);
       } else {
         record = await storage.createGoalClickRecord({
           playerId,
@@ -132,7 +132,7 @@ export function registerGoalRoutes(app: Express) {
         const levelUp = newLevel > oldLevel;
 
         playerGoal = await storage.updatePlayerGoal(playerGoal.id, {
-          totalClicks: playerGoal.totalClicks + 1,
+          totalClicks: (playerGoal.totalClicks || 0) + 1,
           currentLevel: newLevel,
           levelPoints: newPoints,
           lastActivityDate: today
