@@ -81,7 +81,9 @@ export default function Goals() {
 
   const clickMutation = useMutation({
     mutationFn: async (goalId: number) => {
-      return await apiRequest(`/api/goals/${goalId}/click`, { method: "POST" });
+      const response = await fetch(`/api/goals/${goalId}/click`, { method: "POST" });
+      if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
@@ -93,11 +95,13 @@ export default function Goals() {
 
   const switchGoalMutation = useMutation({
     mutationFn: async (goalId: number) => {
-      return await apiRequest("/api/player/active-goal", {
+      const response = await fetch("/api/player/active-goal", {
         method: "POST",
-        body: JSON.stringify({ goalId }),
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goalId }),
       });
+      if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
