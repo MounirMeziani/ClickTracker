@@ -220,8 +220,8 @@ export default function Goals() {
               {selectedGoalId && (
                 <div className="mt-4 space-y-2">
                   <Button
-                    onClick={() => clickMutation.mutate(selectedGoalId)}
-                    disabled={clickMutation.isPending}
+                    onClick={() => selectedGoalId && clickMutation.mutate(selectedGoalId)}
+                    disabled={clickMutation.isPending || !selectedGoalId}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                   >
                     <Activity className="mr-2" size={16} />
@@ -349,10 +349,10 @@ export default function Goals() {
                                   day.isToday ? "bg-blue-500" : "bg-gray-300"
                                 }`}
                                 style={{ 
-                                  height: `${Math.max((day.clicks / Math.max(...goalStats.dailyData.map(d => d.clicks || 0), 1)) * 100, 4)}%`,
+                                  height: `${Math.max(((day.clicks || 0) / Math.max(...goalStats.dailyData.map(d => d.clicks || 0), 1)) * 100, 4)}%`,
                                   minHeight: (day.clicks || 0) > 0 ? "8px" : "2px"
                                 }}
-                                title={`${day.dayName}: ${day.clicks} clicks`}
+                                title={`${day.dayName}: ${day.clicks || 0} clicks`}
                               />
                               <div className="text-xs text-gray-500 mt-1">
                                 {day.dayName}

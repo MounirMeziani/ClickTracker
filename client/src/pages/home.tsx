@@ -385,47 +385,7 @@ export default function Home() {
         </Card>
       </header>
 
-      {/* Training Goal Selection */}
-      <section className="mb-8">
-        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center text-blue-800">
-              <Target className="mr-2" size={20} />
-              Current Training Goal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-lg">🏀 Free Throw Shooting</h3>
-                    <p className="text-sm text-gray-600">Master your free throw technique and consistency</p>
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800">Level {gameData?.profile?.currentLevel || 1}</Badge>
-                </div>
-                <div className="text-sm text-gray-600 mb-2">
-                  Weekly Target: 5 shots • Progress: {(todayData?.clicks || 0)} / 5
-                </div>
-                <Progress 
-                  value={Math.min(((todayData?.clicks || 0) / 5) * 100, 100)} 
-                  className="h-2 mb-3"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Link href="/goals">
-                  <Button variant="outline" size="sm" className="w-full">
-                    Switch Goal
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm" className="w-full">
-                  View Progress
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+
 
       {/* Daily Challenge */}
       {dailyChallenge && (
@@ -626,6 +586,42 @@ export default function Home() {
                 <span className="font-medium text-purple-900">
                   {allTimeData?.bestDay || 0}
                 </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Training Goals */}
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-blue-900">Training Focus</h3>
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Target className="text-blue-600" size={20} />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="text-sm font-medium text-blue-900">
+                🏀 Free Throw Shooting
+              </div>
+              <div className="text-xs text-blue-700">
+                Level {gameData?.profile?.currentLevel || 1} • Weekly target: 5 shots
+              </div>
+              <Progress 
+                value={Math.min(((todayData?.clicks || 0) / 5) * 100, 100)} 
+                className="h-2"
+              />
+              <div className="flex gap-2">
+                <Link href="/goals" className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full text-xs">
+                    Switch
+                  </Button>
+                </Link>
+                <Link href="/goals" className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full text-xs">
+                    Progress
+                  </Button>
+                </Link>
               </div>
             </div>
           </CardContent>
