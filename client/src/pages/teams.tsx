@@ -146,7 +146,7 @@ export default function Teams() {
   };
 
   const copyInviteLink = async (inviteCode: string) => {
-    const inviteUrl = `${window.location.origin}/teams/join/${inviteCode}`;
+    const inviteUrl = `${window.location.origin}/join/${inviteCode}`;
     await navigator.clipboard.writeText(inviteUrl);
     setCopiedCode(inviteCode);
     toast({
@@ -345,10 +345,17 @@ export default function Teams() {
                 
                 <Button 
                   size="sm" 
+                  variant="outline"
                   className="flex-1"
-                  onClick={() => copyInviteLink(team.inviteCode)}
+                  onClick={() => {
+                    toast({
+                      title: "Create Invite",
+                      description: "Use the invite button to generate a shareable link.",
+                    });
+                  }}
                 >
-                  Copy Link
+                  <Copy className="h-4 w-4 mr-1" />
+                  Share
                 </Button>
               </div>
             </CardContent>
