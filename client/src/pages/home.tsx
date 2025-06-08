@@ -129,6 +129,7 @@ export default function Home() {
   const { toast } = useToast();
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showAllGoalsData, setShowAllGoalsData] = useState(false);
 
   // Update current date every minute
   useEffect(() => {
@@ -184,6 +185,12 @@ export default function Home() {
 
   // Use first goal as fallback if no active goal is set
   const currentGoal = activeGoal || (Array.isArray(goals) && goals.length > 0 ? goals[0] : null);
+
+  // Fetch goal-specific Last 7 Days data
+  const { data: goalLast7DaysData } = useQuery<DayData[]>({
+    queryKey: ["/api/goals/active/last-7-days"],
+    enabled: !!activeGoal && !showAllGoalsData,
+  });
 
   const incrementMutation = useMutation({
     mutationFn: () => {
@@ -442,17 +449,17 @@ export default function Home() {
               {(currentGoal || gameData?.nextLevelData) && (
                 <div className="mt-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span>Progress: {currentGoal ? currentGoal.name : gameData?.nextLevelData?.name}</span>
+                    <span>Level Progress: {currentGoal ? currentGoal.name : gameData?.nextLevelData?.name}</span>
                     <span>
                       {currentGoal ? 
-                        `${currentGoal.totalClicks || 0} / ${currentGoal.weeklyTarget || 100}` : 
+                        `${(currentGoal.totalClicks || 0) % 100} / 100 to next level` : 
                         `${gameData?.profile?.totalClicks || 0} / ${gameData?.nextLevelData?.clicksRequired || 100}`
                       }
                     </span>
                   </div>
                   <Progress 
                     value={Math.min(currentGoal ? 
-                      ((currentGoal.totalClicks || 0) / (currentGoal.weeklyTarget || 100)) * 100 :
+                      ((currentGoal.totalClicks || 0) % 100) :
                       ((gameData?.profile?.totalClicks || 0) / (gameData?.nextLevelData?.clicksRequired || 100)) * 100, 100)} 
                     className="h-2"
                   />
