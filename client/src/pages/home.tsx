@@ -192,6 +192,7 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals/active/today"] });
       
       // Show level up notification
       if (data.levelUp && data.levelData) {
@@ -260,6 +261,7 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals/active/today"] });
     },
     onError: () => {
       toast({
@@ -456,10 +458,10 @@ export default function Home() {
                   <div className="mt-2">
                     <div className="flex justify-between text-xs mb-1">
                       <span>Weekly Target Progress</span>
-                      <span>{currentGoal?.totalClicks || 0} / {currentGoal?.weeklyTarget || 100}</span>
+                      <span>{goalTodayData?.clicks || 0} / {currentGoal?.weeklyTarget || 100}</span>
                     </div>
                     <Progress 
-                      value={Math.min(((currentGoal?.totalClicks || 0) / (currentGoal?.weeklyTarget || 100)) * 100, 100)} 
+                      value={Math.min(((goalTodayData?.clicks || 0) / (currentGoal?.weeklyTarget || 100)) * 100, 100)} 
                       className="h-2"
                     />
                   </div>
