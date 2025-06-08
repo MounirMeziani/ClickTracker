@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { storage } from "./storage";
+import { calculateLevel } from "./gameLogic";
 import { 
   BASKETBALL_GOALS, 
   GOAL_CATEGORIES, 
@@ -102,29 +103,43 @@ export function registerGoalRoutes(app: Express) {
   app.post("/api/goals/:goalId/click", async (req, res) => {
     try {
       const goalId = parseInt(req.params.goalId);
-      const today = new Date().toISOString().split('T')[0];
-
-      // Increment overall daily clicks for home counter
-      let clickRecord = await storage.getClickRecordByDate(today);
-      if (clickRecord) {
-        await storage.updateClickRecord(today, (clickRecord.clicks || 0) + 1);
-      } else {
-        await storage.createClickRecord({ date: today, clicks: 1 });
-      }
-
-      // Update player profile total clicks
       const profile = await storage.getPlayerProfile();
-      if (profile) {
-        await storage.updatePlayerProfile({
-          totalClicks: (profile.totalClicks || 0) + 1
-        });
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Player profile not found" });
       }
 
-      // Simple success response
+      // Update click records
+      const today = new Date().toISOString().split('T')[0];
+      let record = await storage.getClickRecordByDate(today);
+      
+      if (record) {
+        record = await storage.updateClickRecord(today, record.clicks + 1);
+      } else {
+        record = await storage.createClickRecord({ date: today, clicks: 1 });
+      }
+
+      // Update player profile
+      const newTotalClicks = profile.totalClicks + 1;
+      const oldLevel = calculateLevel(profile.totalClicks);
+      const newLevel = calculateLevel(newTotalClicks);
+      
+      const updatedProfile = await storage.updatePlayerProfile({
+        totalClicks: newTotalClicks,
+        currentLevel: newLevel
+      });
+      
+      const levelUp = newLevel > oldLevel;
+        
       res.json({
-        success: true,
-        goalId,
-        message: "Goal training click recorded successfully"
+        record,
+        playerGoal: {
+          ...updatedProfile,
+          goalId,
+          levelPoints: newTotalClicks * 1.2
+        },
+        levelUp,
+        progressMessage: levelUp ? `Great progress! You've improved your training level!` : null
       });
     } catch (error) {
       console.error("Goal click error:", error);

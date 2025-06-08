@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -12,12 +12,17 @@ import {
   ChevronRight,
   Activity,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Edit2,
+  Check,
+  X
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Goal {
@@ -64,7 +69,17 @@ interface GoalStats {
 
 export default function Goals() {
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
+  const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState("");
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingGoalId && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editingGoalId]);
 
   const { data: goals } = useQuery<Goal[]>({
     queryKey: ["/api/goals"],
