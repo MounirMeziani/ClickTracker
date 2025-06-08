@@ -128,6 +128,53 @@ export default function Goals() {
     },
   });
 
+  const updateGoalMutation = useMutation({
+    mutationFn: async ({ goalId, name }: { goalId: number; name: string }) => {
+      return await apiRequest("PATCH", `/api/goals/${goalId}`, { name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
+      setEditingGoalId(null);
+      setEditingName("");
+      toast({
+        title: "Goal Updated",
+        description: "Goal name has been updated successfully!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update goal name. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const startEditing = (goal: Goal) => {
+    setEditingGoalId(goal.id);
+    setEditingName(goal.name);
+  };
+
+  const cancelEditing = () => {
+    setEditingGoalId(null);
+    setEditingName("");
+  };
+
+  const saveGoalName = () => {
+    if (editingGoalId && editingName.trim()) {
+      updateGoalMutation.mutate({ goalId: editingGoalId, name: editingName.trim() });
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      saveGoalName();
+    } else if (e.key === "Escape") {
+      cancelEditing();
+    }
+  };
+
   const selectedGoal = playerGoals?.find(pg => pg.goalId === selectedGoalId);
 
   const getCategoryIcon = (category: string) => {
@@ -204,12 +251,60 @@ export default function Goals() {
                     onClick={() => setSelectedGoalId(playerGoal.goalId)}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-1">
                         <span className="text-lg">
                           {getCategoryIcon(playerGoal.goal?.category || "")}
                         </span>
-                        <div>
-                          <h3 className="font-medium text-sm">{playerGoal.goal?.name}</h3>
+                        <div className="flex-1">
+                          {editingGoalId === playerGoal.goalId ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                ref={inputRef}
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onKeyDown={handleKeyPress}
+                                className="h-6 text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveGoalName();
+                                }}
+                                className="h-6 w-6 p-0"
+                              >
+                                <Check size={12} />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cancelEditing();
+                                }}
+                                className="h-6 w-6 p-0"
+                              >
+                                <X size={12} />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium text-sm">{playerGoal.goal?.name}</h3>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startEditing(playerGoal.goal);
+                                }}
+                                className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Edit2 size={10} />
+                              </Button>
+                            </div>
+                          )}
                           <Badge 
                             variant="outline" 
                             className={`text-xs ${getCategoryColor(playerGoal.goal?.category || "")}`}
