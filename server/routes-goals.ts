@@ -187,7 +187,20 @@ export function registerGoalRoutes(app: Express) {
       console.log("Current daily clicks:", clickRecord?.clicks || 0, "Has overall clicks:", hasOverallClicks);
       
       if (hasOverallClicks) {
-        // Update goal-specific clicks (can go to 0)
+        // Always update overall daily clicks first
+        clickRecord = await storage.updateClickRecord(today, Math.max(0, clickRecord.clicks - 1));
+        console.log("Decremented overall daily clicks to:", clickRecord.clicks);
+
+        // Update player profile
+        const profile = await storage.getPlayerProfile();
+        if (profile && (profile.totalClicks || 0) > 0) {
+          await storage.updatePlayerProfile({
+            totalClicks: Math.max(0, (profile.totalClicks || 0) - 1)
+          });
+          console.log("Decremented player profile total clicks");
+        }
+
+        // Update goal-specific clicks if available
         let goalClickRecord = await storage.getGoalClickRecord(goalId, today);
         if (goalClickRecord && (goalClickRecord.clicks || 0) > 0) {
           const newClicks = Math.max(0, (goalClickRecord.clicks || 0) - 1);
@@ -195,7 +208,7 @@ export function registerGoalRoutes(app: Express) {
           console.log("Decremented goal clicks to:", newClicks);
         }
         
-        // Update goal totals (can go to 0)
+        // Update goal totals if available
         const goal = await storage.getGoal(goalId);
         if (goal && (goal.totalClicks || 0) > 0) {
           const newTotalClicks = Math.max(0, (goal.totalClicks || 0) - 1);
@@ -208,19 +221,6 @@ export function registerGoalRoutes(app: Express) {
             currentLevel: newLevel
           });
           console.log("Updated goal totals - clicks:", newTotalClicks, "level:", newLevel);
-        }
-
-        // Update overall daily clicks
-        clickRecord = await storage.updateClickRecord(today, Math.max(0, clickRecord.clicks - 1));
-        console.log("Decremented overall daily clicks to:", clickRecord.clicks);
-
-        // Update player profile
-        const profile = await storage.getPlayerProfile();
-        if (profile && (profile.totalClicks || 0) > 0) {
-          await storage.updatePlayerProfile({
-            totalClicks: Math.max(0, (profile.totalClicks || 0) - 1)
-          });
-          console.log("Decremented player profile total clicks");
         }
       } else {
         console.log("No overall clicks to decrement");
