@@ -151,6 +151,17 @@ export default function Home() {
     queryKey: ["/api/challenge/daily"],
   });
 
+  const { data: playerGoals } = useQuery({
+    queryKey: ["/api/player/goals"],
+  });
+
+  const { data: goals } = useQuery({
+    queryKey: ["/api/goals"],
+  });
+
+  const activeGoal = Array.isArray(playerGoals) ? playerGoals.find((pg: any) => pg.isActive) : null;
+  const activeGoalData = Array.isArray(goals) ? goals.find((g: any) => g.id === activeGoal?.goalId) : null;
+
   const incrementMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/clicks/increment"),
     onSuccess: (data: any) => {
@@ -386,6 +397,44 @@ export default function Home() {
       </header>
 
 
+
+      {/* Active Goal */}
+      {activeGoalData && (
+        <section className="mb-8">
+          <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-blue-800">
+                <Target className="mr-2" size={20} />
+                Active Focus: {activeGoalData.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-900">{activeGoalData.description}</p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Level {activeGoal?.currentLevel || 1} • {activeGoal?.totalPoints || 0} points
+                  </p>
+                  <div className="mt-2">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span>Weekly Target Progress</span>
+                      <span>{todayData?.clicks || 0} / {activeGoal?.weeklyTarget || 100}</span>
+                    </div>
+                    <Progress 
+                      value={Math.min(((todayData?.clicks || 0) / (activeGoal?.weeklyTarget || 100)) * 100, 100)} 
+                      className="h-2"
+                    />
+                  </div>
+                </div>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  <Zap className="mr-1" size={12} />
+                  Active
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* Daily Challenge */}
       {dailyChallenge && (
