@@ -159,6 +159,11 @@ export default function Home() {
     queryKey: ["/api/goals/active"],
   });
 
+  const { data: goalTodayData } = useQuery({
+    queryKey: ["/api/goals/active/today"],
+    enabled: !!activeGoal,
+  });
+
   // Use first goal as fallback if no active goal is set
   const currentGoal = activeGoal || (Array.isArray(goals) && goals.length > 0 ? goals[0] : null);
 
@@ -392,10 +397,10 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-text-primary">
-                  {gameData?.levelData?.title || "Basketball Training"}
+                  {currentGoal ? `Varsity ${currentGoal.name}` : "Basketball Training"}
                 </h1>
                 <p className="text-lg text-text-secondary">
-                  {gameData?.levelData?.name || "Rookie"} • Level {gameData?.profile?.currentLevel || 1}
+                  {currentGoal ? `${currentGoal.name} Level • Level ${currentGoal.currentLevel || 1}` : `${gameData?.levelData?.name || "Rookie"} • Level ${gameData?.profile?.currentLevel || 1}`}
                 </p>
                 <div className="flex items-center mt-1">
                   <div 
@@ -415,11 +420,11 @@ export default function Home() {
               {gameData?.nextLevelData && (
                 <div className="mt-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span>Progress to {gameData.nextLevelData.name}</span>
-                    <span>{gameData.profile.totalClicks} / {gameData.nextLevelData.clicksRequired}</span>
+                    <span>Progress: {currentGoal ? currentGoal.name : gameData.nextLevelData.name}</span>
+                    <span>{currentGoal ? currentGoal.totalClicks || 0 : gameData.profile.totalClicks} / {gameData.nextLevelData.clicksRequired}</span>
                   </div>
                   <Progress 
-                    value={Math.min((gameData.profile.totalClicks / gameData.nextLevelData.clicksRequired) * 100, 100)} 
+                    value={Math.min(((currentGoal ? currentGoal.totalClicks || 0 : gameData.profile.totalClicks) / gameData.nextLevelData.clicksRequired) * 100, 100)} 
                     className="h-2"
                   />
                 </div>
@@ -451,10 +456,10 @@ export default function Home() {
                   <div className="mt-2">
                     <div className="flex justify-between text-xs mb-1">
                       <span>Weekly Target Progress</span>
-                      <span>{todayData?.clicks || 0} / {currentGoal?.weeklyTarget || 100}</span>
+                      <span>{currentGoal?.totalClicks || 0} / {currentGoal?.weeklyTarget || 100}</span>
                     </div>
                     <Progress 
-                      value={Math.min(((todayData?.clicks || 0) / (currentGoal?.weeklyTarget || 100)) * 100, 100)} 
+                      value={Math.min(((currentGoal?.totalClicks || 0) / (currentGoal?.weeklyTarget || 100)) * 100, 100)} 
                       className="h-2"
                     />
                   </div>

@@ -262,4 +262,28 @@ export function registerGoalRoutes(app: Express) {
       res.status(500).json({ message: "Failed to fetch goal analytics" });
     }
   });
+
+  // Get today's clicks for active goal
+  app.get("/api/goals/active/today", async (req, res) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const activeGoal = await storage.getActiveGoal(PLAYER_ID);
+      
+      if (!activeGoal) {
+        return res.json({ clicks: 0, date: today });
+      }
+      
+      const goalClickRecord = await storage.getGoalClickRecord(activeGoal.id, today);
+      
+      res.json({
+        clicks: goalClickRecord?.clicks || 0,
+        date: today,
+        goalId: activeGoal.id,
+        goalName: activeGoal.name
+      });
+    } catch (error) {
+      console.error("Error getting active goal today clicks:", error);
+      res.status(500).json({ message: "Failed to get today's goal clicks" });
+    }
+  });
 }
