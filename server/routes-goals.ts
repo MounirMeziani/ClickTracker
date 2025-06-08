@@ -164,7 +164,8 @@ export function registerGoalRoutes(app: Express) {
       }
     } catch (error) {
       console.error("Goal click error:", error);
-      res.status(500).json({ message: "Failed to record goal click" });
+      console.error("Error details:", error);
+      res.status(500).json({ message: "Failed to record goal click", error: error.message });
     }
   });
 
