@@ -159,11 +159,18 @@ export default function Home() {
     queryKey: ["/api/goals"],
   });
 
-  const activeGoal = Array.isArray(playerGoals) ? playerGoals.find((pg: any) => pg.isActive) : null;
+  // Use the first goal as active goal if no explicit active goal is set
+  const activeGoal = Array.isArray(playerGoals) ? (playerGoals.find((pg: any) => pg.isActive) || playerGoals[0]) : null;
   const activeGoalData = Array.isArray(goals) ? goals.find((g: any) => g.id === activeGoal?.goalId) : null;
 
   const incrementMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/clicks/increment"),
+    mutationFn: () => {
+      // Use goal-specific endpoint if there's an active goal
+      if (activeGoal?.goalId) {
+        return fetch(`/api/goals/${activeGoal.goalId}/click`, { method: "POST" }).then(res => res.json());
+      }
+      return apiRequest("POST", "/api/clicks/increment");
+    },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/today"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/weekly"] });
@@ -171,6 +178,8 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/all-time"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/last-7-days"] });
       queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
       
       // Show level up notification
       if (data.levelUp && data.levelData) {
@@ -215,13 +224,22 @@ export default function Home() {
   });
 
   const decrementMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/clicks/decrement"),
+    mutationFn: () => {
+      // Use goal-specific endpoint if there's an active goal
+      if (activeGoal?.goalId) {
+        return fetch(`/api/goals/${activeGoal.goalId}/decrement`, { method: "POST" }).then(res => res.json());
+      }
+      return apiRequest("POST", "/api/clicks/decrement");
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/today"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/weekly"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/monthly"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/all-time"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clicks/last-7-days"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
     },
     onError: () => {
       toast({
