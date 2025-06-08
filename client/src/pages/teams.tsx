@@ -92,6 +92,8 @@ export default function Teams() {
     },
     onSuccess: async (response) => {
       const data = await response.json();
+      console.log("Invite creation response:", data);
+      
       toast({
         title: "Invite Created",
         description: `Invitation created! Link copied to clipboard.`,
@@ -99,9 +101,12 @@ export default function Teams() {
       
       // Copy invite link to clipboard
       if (data.inviteLink) {
+        console.log("Copying invite link:", data.inviteLink);
         navigator.clipboard.writeText(data.inviteLink);
-        setCopiedCode(data.invite.inviteCode);
+        setCopiedCode(data.invite?.inviteCode);
         setTimeout(() => setCopiedCode(null), 3000);
+      } else {
+        console.error("No invite link in response:", data);
       }
     },
     onError: () => {

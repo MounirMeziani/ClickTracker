@@ -424,8 +424,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teamId = parseInt(req.params.teamId);
       const { inviteeEmail } = req.body;
       
+      console.log("Creating invite for team:", teamId, "email:", inviteeEmail);
+      
       // Generate unique invite code
       const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      console.log("Generated invite code:", inviteCode);
       
       // Set expiration to 7 days from now
       const expiresAt = new Date();
@@ -441,6 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create invite link
       const inviteLink = `${req.protocol}://${req.get('host')}/join/${inviteCode}`;
+      console.log("Generated invite link:", inviteLink);
 
       res.json({ 
         invite, 

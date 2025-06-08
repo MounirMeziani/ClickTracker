@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Social from "@/pages/social";
 import Teams from "@/pages/teams";
 import Goals from "@/pages/goals";
+import JoinTeam from "@/pages/join-team";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/social" component={Social} />
       <Route path="/teams" component={Teams} />
       <Route path="/goals" component={Goals} />
+      <Route path="/join/:inviteCode" component={JoinTeam} />
       <Route component={NotFound} />
     </Switch>
   );
