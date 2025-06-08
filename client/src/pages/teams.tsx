@@ -65,10 +65,19 @@ export default function Teams() {
       return await apiRequest("POST", "/api/teams", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams/user/1"] });
+      createTeamForm.reset();
       toast({
         title: "Team Created",
         description: "Your team has been created successfully!",
+      });
+    },
+    onError: (error) => {
+      console.error("Team creation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create team. Please try again.",
+        variant: "destructive",
       });
     },
   });

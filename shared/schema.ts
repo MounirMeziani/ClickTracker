@@ -47,6 +47,7 @@ export const teams = pgTable("teams", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
   description: text("description"),
+  ownerId: integer("owner_id").notNull().references(() => users.id),
   maxMembers: integer("max_members").notNull().default(10),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
