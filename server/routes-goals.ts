@@ -102,25 +102,36 @@ export function registerGoalRoutes(app: Express) {
   // Track clicks for a specific goal
   app.post("/api/goals/:goalId/click", async (req, res) => {
     try {
+      console.log("Goal click endpoint hit for goalId:", req.params.goalId);
       const goalId = parseInt(req.params.goalId);
       const today = new Date().toISOString().split('T')[0];
+      
+      console.log("Processing click for goal:", goalId, "on date:", today);
 
       // Increment overall daily clicks for home counter
       let clickRecord = await storage.getClickRecordByDate(today);
+      console.log("Current click record:", clickRecord);
+      
       if (clickRecord) {
-        await storage.updateClickRecord(today, clickRecord.clicks + 1);
+        clickRecord = await storage.updateClickRecord(today, clickRecord.clicks + 1);
+        console.log("Updated click record:", clickRecord);
       } else {
-        await storage.createClickRecord({ date: today, clicks: 1 });
+        clickRecord = await storage.createClickRecord({ date: today, clicks: 1 });
+        console.log("Created new click record:", clickRecord);
       }
 
       // Update player profile total clicks
       const profile = await storage.getPlayerProfile();
+      console.log("Current profile:", profile);
+      
       if (profile) {
-        await storage.updatePlayerProfile({
+        const updatedProfile = await storage.updatePlayerProfile({
           totalClicks: profile.totalClicks + 1
         });
+        console.log("Updated profile:", updatedProfile);
       }
 
+      console.log("Successfully processed goal click");
       res.json({
         success: true,
         goalId,
@@ -128,6 +139,7 @@ export function registerGoalRoutes(app: Express) {
       });
     } catch (error: any) {
       console.error("Goal click error:", error);
+      console.error("Error message:", error.message);
       console.error("Error stack:", error.stack);
       res.status(500).json({ message: "Failed to record goal click" });
     }

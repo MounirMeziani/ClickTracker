@@ -21,6 +21,9 @@ import { registerGoalRoutes } from "./routes-goals";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register goal routes first to avoid conflicts
+  registerGoalRoutes(app);
+
   // Get today's click count
   app.get("/api/clicks/today", async (req, res) => {
     try {
@@ -645,8 +648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Register goal routes
-  registerGoalRoutes(app);
+
 
   const httpServer = createServer(app);
   return httpServer;

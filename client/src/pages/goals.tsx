@@ -243,7 +243,7 @@ export default function Goals() {
                 {playerGoals?.map((playerGoal) => (
                   <div
                     key={playerGoal.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                    className={`group p-3 rounded-lg border cursor-pointer transition-colors ${
                       selectedGoalId === playerGoal.goalId
                         ? "bg-blue-50 border-blue-200"
                         : "bg-white border-gray-200 hover:bg-gray-50"
