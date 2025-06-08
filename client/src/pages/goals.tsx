@@ -311,28 +311,28 @@ export default function Goals() {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Progress to weekly target</span>
                         <span className="text-sm font-medium">
-                          {goalStats.weeklyStats.clicks} / {goalStats.weeklyStats.target}
+                          {goalStats.weeklyStats?.clicks || 0} / {goalStats.weeklyStats?.target || 0}
                         </span>
                       </div>
                       
                       <Progress 
-                        value={Math.min(goalStats.weeklyStats.progressPercentage, 100)} 
+                        value={Math.min(goalStats.weeklyStats?.progressPercentage || 0, 100)} 
                         className="h-3"
                       />
                       
                       <div className="flex items-center gap-4 text-sm">
                         <div className={`flex items-center gap-1 ${
-                          goalStats.weeklyStats.metTarget ? "text-green-600" : "text-orange-600"
+                          goalStats.weeklyStats?.metTarget ? "text-green-600" : "text-orange-600"
                         }`}>
-                          {goalStats.weeklyStats.metTarget ? (
+                          {goalStats.weeklyStats?.metTarget ? (
                             <Trophy size={16} />
                           ) : (
                             <Clock size={16} />
                           )}
                           <span>
-                            {goalStats.weeklyStats.metTarget 
+                            {goalStats.weeklyStats?.metTarget 
                               ? "Target achieved!" 
-                              : `${Math.round(goalStats.weeklyStats.progressPercentage)}% complete`
+                              : `${Math.round(goalStats.weeklyStats?.progressPercentage || 0)}% complete`
                             }
                           </span>
                         </div>
@@ -342,23 +342,27 @@ export default function Goals() {
                       <div className="mt-6">
                         <h4 className="text-sm font-medium mb-3">Daily Activity</h4>
                         <div className="flex items-end gap-2 h-24">
-                          {goalStats.dailyData.map((day) => (
-                            <div key={day.date} className="flex-1 flex flex-col items-center">
-                              <div 
-                                className={`w-full rounded-t transition-all ${
-                                  day.isToday ? "bg-blue-500" : "bg-gray-300"
-                                }`}
-                                style={{ 
-                                  height: `${Math.max(((day.clicks || 0) / Math.max(...goalStats.dailyData.map(d => d.clicks || 0), 1)) * 100, 4)}%`,
-                                  minHeight: (day.clicks || 0) > 0 ? "8px" : "2px"
-                                }}
-                                title={`${day.dayName}: ${day.clicks || 0} clicks`}
-                              />
-                              <div className="text-xs text-gray-500 mt-1">
-                                {day.dayName}
+                          {(goalStats.dailyData || []).map((day) => {
+                            const clickCount = day?.clicks || 0;
+                            const maxClicks = Math.max(...(goalStats.dailyData || []).map(d => d?.clicks || 0), 1);
+                            return (
+                              <div key={day?.date || Math.random()} className="flex-1 flex flex-col items-center">
+                                <div 
+                                  className={`w-full rounded-t transition-all ${
+                                    day?.isToday ? "bg-blue-500" : "bg-gray-300"
+                                  }`}
+                                  style={{ 
+                                    height: `${Math.max((clickCount / maxClicks) * 100, 4)}%`,
+                                    minHeight: clickCount > 0 ? "8px" : "2px"
+                                  }}
+                                  title={`${day?.dayName || 'Day'}: ${clickCount} clicks`}
+                                />
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {day?.dayName || '?'}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
