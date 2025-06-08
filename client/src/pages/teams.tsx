@@ -77,11 +77,11 @@ export default function Teams() {
     mutationFn: async ({ teamId, inviteeEmail }: { teamId: number; inviteeEmail: string }) => {
       return await apiRequest("POST", `/api/teams/${teamId}/invites`, { inviteeEmail });
     },
-    onSuccess: (response) => {
-      const data = response.json();
+    onSuccess: async (response) => {
+      const data = await response.json();
       toast({
         title: "Invite Created",
-        description: `Invitation created! Share this link: ${data.inviteLink}`,
+        description: `Invitation created! Link copied to clipboard.`,
       });
       
       // Copy invite link to clipboard
