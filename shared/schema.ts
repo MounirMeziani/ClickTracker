@@ -70,6 +70,18 @@ export const teamActivity = pgTable("team_activity", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const teamInvites = pgTable("team_invites", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  inviteCode: varchar("invite_code", { length: 20 }).notNull().unique(),
+  inviterUserId: integer("inviter_user_id").notNull().references(() => users.id),
+  inviteeEmail: varchar("invitee_email", { length: 255 }),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, accepted, expired
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Clean goals system - each goal is independent
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
@@ -160,6 +172,14 @@ export const insertGoalClickRecordSchema = createInsertSchema(goalClickRecords).
   clicks: true,
 });
 
+export const insertTeamInviteSchema = createInsertSchema(teamInvites).pick({
+  teamId: true,
+  inviteCode: true,
+  inviterUserId: true,
+  inviteeEmail: true,
+  expiresAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -180,3 +200,5 @@ export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 export type GoalClickRecord = typeof goalClickRecords.$inferSelect;
 export type InsertGoalClickRecord = z.infer<typeof insertGoalClickRecordSchema>;
+export type TeamInvite = typeof teamInvites.$inferSelect;
+export type InsertTeamInvite = z.infer<typeof insertTeamInviteSchema>;
