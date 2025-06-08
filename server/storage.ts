@@ -68,10 +68,12 @@ export interface IStorage {
   getAllGoals(): Promise<Goal[]>;
   createGoal(goal: InsertGoal): Promise<Goal>;
   updateGoal(id: number, updates: Partial<Goal>): Promise<Goal>;
+  deleteGoal(id: number): Promise<void>;
   getPlayerGoals(playerId: number): Promise<PlayerGoal[]>;
   getPlayerGoal(playerId: number, goalId: number): Promise<PlayerGoal | undefined>;
   createPlayerGoal(playerGoal: InsertPlayerGoal): Promise<PlayerGoal>;
   updatePlayerGoal(id: number, updates: Partial<PlayerGoal>): Promise<PlayerGoal>;
+  deletePlayerGoal(id: number): Promise<void>;
   
   // Goal click tracking
   getGoalClickRecord(playerId: number, goalId: number, date: string): Promise<GoalClickRecord | undefined>;
@@ -318,6 +320,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(playerGoals.id, id))
       .returning();
     return updatedPlayerGoal;
+  }
+
+  async deleteGoal(id: number): Promise<void> {
+    await db.delete(goals).where(eq(goals.id, id));
+  }
+
+  async deletePlayerGoal(id: number): Promise<void> {
+    await db.delete(playerGoals).where(eq(playerGoals.id, id));
   }
 
   // Goal click tracking methods

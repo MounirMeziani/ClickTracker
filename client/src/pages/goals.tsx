@@ -15,7 +15,8 @@ import {
   AlertTriangle,
   Edit2,
   Check,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -196,6 +197,28 @@ export default function Goals() {
     },
   });
 
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (goalId: number) => {
+      return await apiRequest("DELETE", `/api/goals/${goalId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
+      setSelectedGoalId(null); // Clear selection if deleted goal was selected
+      toast({
+        title: "Goal Deleted",
+        description: "Goal has been deleted successfully!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete goal. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const selectedGoal = playerGoals?.find(pg => pg.goalId === selectedGoalId);
 
   const getCategoryIcon = (category: string) => {
@@ -331,17 +354,32 @@ export default function Goals() {
                           ) : (
                             <div className="flex items-center gap-2">
                               <h3 className="font-medium text-sm">{playerGoal.goal?.name}</h3>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  startEditing(playerGoal.goal);
-                                }}
-                                className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <Edit2 size={10} />
-                              </Button>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEditing(playerGoal.goal);
+                                  }}
+                                  className="h-5 w-5 p-0"
+                                >
+                                  <Edit2 size={10} />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm(`Delete "${playerGoal.goal?.name}"?`)) {
+                                      deleteGoalMutation.mutate(playerGoal.goalId);
+                                    }
+                                  }}
+                                  className="h-5 w-5 p-0 text-red-500 hover:text-red-700"
+                                >
+                                  <Trash2 size={10} />
+                                </Button>
+                              </div>
                             </div>
                           )}
                           <Badge 
