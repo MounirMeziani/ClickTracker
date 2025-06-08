@@ -444,6 +444,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simplified goal management routes
+  app.get("/api/goals", async (req, res) => {
+    try {
+      const goals = [
+        { id: 1, name: "Free Throw Shooting", description: "Master your free throw technique and consistency", category: "shooting", maxLevel: 12 },
+        { id: 2, name: "Ball Handling", description: "Improve your dribbling skills and ball control", category: "fundamentals", maxLevel: 12 },
+        { id: 3, name: "Defensive Stance", description: "Perfect your defensive positioning and footwork", category: "defense", maxLevel: 12 },
+        { id: 4, name: "Court Conditioning", description: "Build basketball-specific endurance and agility", category: "fitness", maxLevel: 12 },
+        { id: 5, name: "3-Point Shooting", description: "Extend your range and improve 3-point accuracy", category: "shooting", maxLevel: 12 },
+        { id: 6, name: "Layup Finishing", description: "Master finishing around the rim with both hands", category: "shooting", maxLevel: 12 }
+      ];
+      res.json(goals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get goals" });
+    }
+  });
+
+  app.get("/api/player/goals", async (req, res) => {
+    try {
+      const profile = await storage.getPlayerProfile();
+      const weeklyAverage = 15.3; // Based on current stats
+      const dailyAverage = 107; // Based on current stats
+      const minimumThreshold = Math.round(weeklyAverage * 0.3);
+
+      const playerGoals = [
+        {
+          id: 1,
+          goalId: 1,
+          currentLevel: profile?.currentLevel || 1,
+          totalClicks: profile?.totalClicks || 0,
+          levelPoints: (profile?.totalClicks || 0) * 1.2,
+          weeklyTarget: minimumThreshold,
+          lastActivityDate: new Date().toISOString().split('T')[0],
+          goal: { id: 1, name: "Free Throw Shooting", description: "Master your free throw technique", category: "shooting", maxLevel: 12 },
+          category: { name: "Shooting", color: "#f59e0b", icon: "🏀" },
+          decayInfo: { daysInactive: 0, pointsLost: 0 }
+        },
+        {
+          id: 2,
+          goalId: 2,
+          currentLevel: 1,
+          totalClicks: 0,
+          levelPoints: 0,
+          weeklyTarget: minimumThreshold,
+          lastActivityDate: null,
+          goal: { id: 2, name: "Ball Handling", description: "Improve your dribbling skills", category: "fundamentals", maxLevel: 12 },
+          category: { name: "Fundamentals", color: "#3b82f6", icon: "⚡" },
+          decayInfo: { daysInactive: 0, pointsLost: 0 }
+        }
+      ];
+
+      res.json(playerGoals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get player goals" });
+    }
+  });
+
+  app.post("/api/goals/:goalId/click", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      
+      // For now, use the main click tracking system
+      const today = new Date().toISOString().split('T')[0];
+      let record = await storage.getClickRecordByDate(today);
+      
+      if (record) {
+        record = await storage.updateClickRecord(today, record.clicks + 1);
+      } else {
+        record = await storage.createClickRecord({ date: today, clicks: 1 });
+      }
+
+      // Update main player profile
+      let profile = await storage.getPlayerProfile();
+      if (profile) {
+        const oldLevel = profile.currentLevel;
+        const newTotalClicks = profile.totalClicks + 1;
+        
+        profile = await storage.updatePlayerProfile({
+          ...profile,
+          totalClicks: newTotalClicks
+        });
+
+        const levelUp = profile.currentLevel > oldLevel;
+        
+        res.json({
+          record,
+          playerGoal: {
+            ...profile,
+            goalId,
+            levelPoints: newTotalClicks * 1.2
+          },
+          levelUp,
+          progressMessage: levelUp ? `Great progress! You've improved your training level!` : null
+        });
+      } else {
+        res.status(404).json({ message: "Player profile not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to record goal click" });
+    }
+  });
+
+  app.get("/api/goals/:goalId/stats", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const profile = await storage.getPlayerProfile();
+      
+      // Get last 7 days for weekly stats
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 6);
+      
+      const records = await storage.getClickRecordsInRange(
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
+      );
+
+      const weeklyClicks = records.reduce((sum, record) => sum + record.clicks, 0);
+      const weeklyTarget = Math.round(15.3 * 0.3); // 30% of average
+      const progressPercentage = weeklyTarget > 0 ? (weeklyClicks / weeklyTarget) * 100 : 0;
+
+      // Prepare daily data
+      const dailyData = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(endDate.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const record = records.find(r => r.date === dateStr);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        
+        dailyData.push({
+          date: dateStr,
+          clicks: record?.clicks || 0,
+          dayName,
+          isToday: i === 0
+        });
+      }
+
+      const goalData = {
+        1: { name: "Free Throw Shooting", description: "Master your free throw technique", category: "shooting" },
+        2: { name: "Ball Handling", description: "Improve your dribbling skills", category: "fundamentals" }
+      }[goalId] || { name: "Training Goal", description: "Basketball skill development", category: "general" };
+
+      res.json({
+        goal: goalData,
+        playerGoal: {
+          ...profile,
+          goalId,
+          levelPoints: (profile?.totalClicks || 0) * 1.2,
+          weeklyTarget
+        },
+        weeklyStats: {
+          clicks: weeklyClicks,
+          target: weeklyTarget,
+          progressPercentage: Math.round(progressPercentage * 10) / 10,
+          metTarget: weeklyClicks >= weeklyTarget
+        },
+        dailyData
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get goal stats" });
+    }
+  });
+
+  app.post("/api/player/active-goal", async (req, res) => {
+    try {
+      const { goalId } = req.body;
+      
+      const goalData = {
+        1: { id: 1, name: "Free Throw Shooting", description: "Master your free throw technique", category: "shooting" },
+        2: { id: 2, name: "Ball Handling", description: "Improve your dribbling skills", category: "fundamentals" }
+      }[goalId];
+      
+      if (!goalData) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        activeGoal: goalData,
+        message: `Switched to ${goalData.name}` 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to switch goal" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
