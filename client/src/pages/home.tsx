@@ -110,6 +110,21 @@ interface DailyChallenge {
   reward: string;
 }
 
+// Goal-specific level calculation functions
+function getGoalLevel(totalClicks: number): number {
+  if (totalClicks >= 100) return Math.floor(totalClicks / 100) + 1;
+  return 1;
+}
+
+function getGoalLevelTitle(totalClicks: number): string {
+  const level = getGoalLevel(totalClicks);
+  if (level === 1) return "Rookie";
+  if (level <= 3) return "Amateur";
+  if (level <= 6) return "Semi-Pro";
+  if (level <= 10) return "Professional";
+  return "Elite";
+}
+
 export default function Home() {
   const { toast } = useToast();
   const [isAnimating, setIsAnimating] = useState(false);
@@ -404,10 +419,10 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-text-primary">
-                  {currentGoal ? `Varsity ${currentGoal.name}` : "Basketball Training"}
+                  {currentGoal ? `${getGoalLevelTitle(currentGoal.totalClicks || 0)} ${currentGoal.name}` : "Basketball Training"}
                 </h1>
                 <p className="text-lg text-text-secondary">
-                  {currentGoal ? `${currentGoal.name} Level • Level ${currentGoal.currentLevel || 1}` : `${gameData?.levelData?.name || "Rookie"} • Level ${gameData?.profile?.currentLevel || 1}`}
+                  {currentGoal ? `${currentGoal.name} Level • Level ${getGoalLevel(currentGoal.totalClicks || 0)}` : `${gameData?.levelData?.name || "Rookie"} • Level ${gameData?.profile?.currentLevel || 1}`}
                 </p>
                 <div className="flex items-center mt-1">
                   <div 
