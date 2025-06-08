@@ -6,6 +6,9 @@ import {
   teams,
   teamMembers,
   teamActivity,
+  goals,
+  playerGoals,
+  goalClickRecords,
   type User, 
   type InsertUser, 
   type ClickRecord, 
@@ -20,7 +23,13 @@ import {
   type TeamMember,
   type InsertTeamMember,
   type TeamActivity,
-  type InsertTeamActivity
+  type InsertTeamActivity,
+  type Goal,
+  type InsertGoal,
+  type PlayerGoal,
+  type InsertPlayerGoal,
+  type GoalClickRecord,
+  type InsertGoalClickRecord
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc } from "drizzle-orm";

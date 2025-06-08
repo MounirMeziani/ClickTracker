@@ -108,50 +108,51 @@ export function checkAchievements(
   dailyChallengesCompleted: number
 ): string[] {
   const newAchievements: string[] = [];
+  const existingAchievements = currentAchievements || [];
 
   // Click-based achievements
-  if (totalClicks >= 1 && !currentAchievements.includes('firstClick')) {
+  if (totalClicks >= 1 && !existingAchievements.includes('firstClick')) {
     newAchievements.push('firstClick');
   }
-  if (totalClicks >= 100 && !currentAchievements.includes('hundred')) {
+  if (totalClicks >= 100 && !existingAchievements.includes('hundred')) {
     newAchievements.push('hundred');
   }
-  if (totalClicks >= 1000 && !currentAchievements.includes('thousand')) {
+  if (totalClicks >= 1000 && !existingAchievements.includes('thousand')) {
     newAchievements.push('thousand');
   }
-  if (totalClicks >= 10000 && !currentAchievements.includes('tenThousand')) {
+  if (totalClicks >= 10000 && !existingAchievements.includes('tenThousand')) {
     newAchievements.push('tenThousand');
   }
 
   // Streak achievements
-  if (streakCount >= 3 && !currentAchievements.includes('streak3')) {
+  if (streakCount >= 3 && !existingAchievements.includes('streak3')) {
     newAchievements.push('streak3');
   }
-  if (streakCount >= 7 && !currentAchievements.includes('streak7')) {
+  if (streakCount >= 7 && !existingAchievements.includes('streak7')) {
     newAchievements.push('streak7');
   }
-  if (streakCount >= 30 && !currentAchievements.includes('streak30')) {
+  if (streakCount >= 30 && !existingAchievements.includes('streak30')) {
     newAchievements.push('streak30');
   }
 
   // Daily achievements
-  if (todayClicks >= 100 && !currentAchievements.includes('speedster')) {
+  if (todayClicks >= 100 && !existingAchievements.includes('speedster')) {
     newAchievements.push('speedster');
   }
-  if (todayClicks >= 500 && !currentAchievements.includes('marathon')) {
+  if (todayClicks >= 500 && !existingAchievements.includes('marathon')) {
     newAchievements.push('marathon');
   }
 
   // Time-based achievements
-  if (isEarlyMorning && !currentAchievements.includes('earlyBird')) {
+  if (isEarlyMorning && !existingAchievements.includes('earlyBird')) {
     newAchievements.push('earlyBird');
   }
-  if (isLateNight && !currentAchievements.includes('nightOwl')) {
+  if (isLateNight && !existingAchievements.includes('nightOwl')) {
     newAchievements.push('nightOwl');
   }
 
   // Challenge achievements
-  if (dailyChallengesCompleted >= 10 && !currentAchievements.includes('dailyChamp')) {
+  if (dailyChallengesCompleted >= 10 && !existingAchievements.includes('dailyChamp')) {
     newAchievements.push('dailyChamp');
   }
 
