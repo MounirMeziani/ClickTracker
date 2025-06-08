@@ -72,6 +72,9 @@ export default function Teams() {
         title: "Team Created",
         description: "Your team has been created successfully!",
       });
+      // Force close any open dialogs by resetting form state
+      createTeamForm.setValue("name", "");
+      createTeamForm.setValue("description", "");
     },
     onError: (error) => {
       console.error("Team creation error:", error);
