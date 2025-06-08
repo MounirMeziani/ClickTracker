@@ -192,6 +192,7 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals/active/today"] });
       
       // Show level up notification
