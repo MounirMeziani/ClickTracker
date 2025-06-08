@@ -5,6 +5,9 @@ import {
   dailyChallenges,
   goals,
   goalClickRecords,
+  teams,
+  teamMembers,
+  teamInvites,
   type User, 
   type InsertUser, 
   type ClickRecord, 
@@ -18,9 +21,15 @@ import {
   type InsertGoal,
   type GoalClickRecord,
   type InsertGoalClickRecord,
+  type Team,
+  type InsertTeam,
+  type TeamMember,
+  type InsertTeamMember,
+  type TeamInvite,
+  type InsertTeamInvite,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 // Clean storage interface for the new goals system
 export interface IStorage {
@@ -60,6 +69,23 @@ export interface IStorage {
   createGoalClickRecord(record: InsertGoalClickRecord): Promise<GoalClickRecord>;
   updateGoalClickRecord(id: number, clicks: number): Promise<GoalClickRecord>;
   getGoalClickRecords(goalId: number, startDate: string, endDate: string): Promise<GoalClickRecord[]>;
+  
+  // Team management
+  createTeam(team: InsertTeam): Promise<Team>;
+  getTeam(teamId: number): Promise<Team | undefined>;
+  getUserTeams(userId: number): Promise<Team[]>;
+  getTeamMembers(teamId: number): Promise<Array<{member: TeamMember, user: User, profile: PlayerProfile}>>;
+  addTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  removeTeamMember(teamId: number, userId: number): Promise<void>;
+  
+  // Team invites
+  createTeamInvite(invite: InsertTeamInvite): Promise<TeamInvite>;
+  getTeamInvite(inviteCode: string): Promise<TeamInvite | undefined>;
+  acceptTeamInvite(inviteCode: string, userId: number): Promise<{success: boolean, team?: Team}>;
+  getTeamInvites(teamId: number): Promise<TeamInvite[]>;
+  
+  // Team progress tracking
+  getTeamProgress(teamId: number): Promise<Array<{user: User, profile: PlayerProfile, goals: Goal[], todayClicks: number}>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -222,6 +248,157 @@ export class DatabaseStorage implements IStorage {
         // Add date range filtering logic here
       ))
       .orderBy(desc(goalClickRecords.date));
+  }
+
+  // Team management
+  async createTeam(teamData: InsertTeam): Promise<Team> {
+    const [team] = await db.insert(teams).values(teamData).returning();
+    return team;
+  }
+
+  async getTeam(teamId: number): Promise<Team | undefined> {
+    const [team] = await db.select().from(teams).where(eq(teams.id, teamId));
+    return team;
+  }
+
+  async getUserTeams(userId: number): Promise<Team[]> {
+    const result = await db
+      .select({ team: teams })
+      .from(teamMembers)
+      .innerJoin(teams, eq(teamMembers.teamId, teams.id))
+      .where(eq(teamMembers.playerId, userId));
+    
+    return result.map(r => r.team);
+  }
+
+  async getTeamMembers(teamId: number): Promise<Array<{member: TeamMember, user: User, profile: PlayerProfile}>> {
+    const result = await db
+      .select({
+        member: teamMembers,
+        user: users,
+        profile: playerProfile
+      })
+      .from(teamMembers)
+      .innerJoin(users, eq(teamMembers.playerId, users.id))
+      .leftJoin(playerProfile, eq(users.id, playerProfile.id))
+      .where(eq(teamMembers.teamId, teamId));
+
+    return result;
+  }
+
+  async addTeamMember(memberData: InsertTeamMember): Promise<TeamMember> {
+    const [member] = await db.insert(teamMembers).values(memberData).returning();
+    return member;
+  }
+
+  async removeTeamMember(teamId: number, userId: number): Promise<void> {
+    await db.delete(teamMembers)
+      .where(and(
+        eq(teamMembers.teamId, teamId),
+        eq(teamMembers.playerId, userId)
+      ));
+  }
+
+  // Team invites
+  async createTeamInvite(inviteData: InsertTeamInvite): Promise<TeamInvite> {
+    const [invite] = await db.insert(teamInvites).values(inviteData).returning();
+    return invite;
+  }
+
+  async getTeamInvite(inviteCode: string): Promise<TeamInvite | undefined> {
+    const [invite] = await db.select().from(teamInvites)
+      .where(eq(teamInvites.inviteCode, inviteCode));
+    return invite;
+  }
+
+  async acceptTeamInvite(inviteCode: string, userId: number): Promise<{success: boolean, team?: Team}> {
+    const invite = await this.getTeamInvite(inviteCode);
+    
+    if (!invite) {
+      return { success: false };
+    }
+
+    if (invite.status !== 'pending') {
+      return { success: false };
+    }
+
+    if (new Date() > invite.expiresAt) {
+      return { success: false };
+    }
+
+    // Check if user is already a team member
+    const existingMember = await db.select().from(teamMembers)
+      .where(and(
+        eq(teamMembers.teamId, invite.teamId),
+        eq(teamMembers.playerId, userId)
+      ));
+
+    if (existingMember.length > 0) {
+      return { success: false };
+    }
+
+    // Add user to team
+    await this.addTeamMember({
+      teamId: invite.teamId,
+      playerId: userId,
+      role: 'member'
+    });
+
+    // Mark invite as accepted
+    await db.update(teamInvites)
+      .set({ 
+        status: 'accepted',
+        usedAt: new Date()
+      })
+      .where(eq(teamInvites.inviteCode, inviteCode));
+
+    const team = await this.getTeam(invite.teamId);
+    return { success: true, team };
+  }
+
+  async getTeamInvites(teamId: number): Promise<TeamInvite[]> {
+    return await db.select().from(teamInvites)
+      .where(eq(teamInvites.teamId, teamId))
+      .orderBy(desc(teamInvites.createdAt));
+  }
+
+  // Team progress tracking
+  async getTeamProgress(teamId: number): Promise<Array<{user: User, profile: PlayerProfile, goals: Goal[], todayClicks: number}>> {
+    const members = await this.getTeamMembers(teamId);
+    const today = new Date().toISOString().split('T')[0];
+    
+    const progress = [];
+    
+    for (const { user, profile } of members) {
+      // Get user's goals
+      const userGoals = await this.getGoals(user.id);
+      
+      // Get today's clicks from click records
+      const todayRecord = await this.getClickRecordByDate(today);
+      const todayClicks = todayRecord?.clicks || 0;
+      
+      progress.push({
+        user,
+        profile: profile || {
+          id: user.id,
+          currentLevel: 1,
+          totalClicks: 0,
+          currentSkin: 'rookie',
+          unlockedSkins: ['rookie'],
+          achievements: [],
+          dailyChallengeCompleted: false,
+          lastChallengeDate: null,
+          streakCount: 0,
+          teamId: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        goals: userGoals,
+        todayClicks
+      });
+    }
+    
+    return progress;
   }
 }
 

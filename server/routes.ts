@@ -342,8 +342,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Teams endpoints (simplified for now)
+  // Team management endpoints
   app.get("/api/teams/user/:userId", async (req, res) => {
-    res.json([]);
+    try {
+      const userId = parseInt(req.params.userId);
+      const teams = await storage.getUserTeams(userId);
+      res.json(teams);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user teams" });
+    }
   });
 
   app.post("/api/teams", async (req, res) => {
@@ -354,28 +361,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Team name must be at least 3 characters" });
       }
 
-      // Generate a simple invite code
-      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
-      // Create a mock team (since we don't have team storage)
-      const team = {
-        id: Date.now(), // Simple ID generation
+      // Create the team
+      const team = await storage.createTeam({
         name,
         description: description || "",
-        ownerId: 1,
-        inviteCode,
-        memberCount: 1,
-        createdAt: new Date().toISOString()
-      };
+        maxMembers: 10
+      });
+
+      // Add creator as first member with captain role
+      await storage.addTeamMember({
+        teamId: team.id,
+        playerId: 1, // Using hardcoded user ID for now
+        role: 'captain'
+      });
 
       res.json({ team, message: "Team created successfully" });
     } catch (error) {
+      console.error("Team creation error:", error);
       res.status(500).json({ message: "Failed to create team" });
     }
   });
 
-  app.post("/api/teams/:teamId/join", async (req, res) => {
-    res.status(501).json({ message: "Teams feature coming soon" });
+  app.get("/api/teams/:teamId", async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+
+      res.json(team);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get team" });
+    }
+  });
+
+  app.get("/api/teams/:teamId/members", async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const members = await storage.getTeamMembers(teamId);
+      res.json(members);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get team members" });
+    }
+  });
+
+  app.get("/api/teams/:teamId/progress", async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const progress = await storage.getTeamProgress(teamId);
+      res.json(progress);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get team progress" });
+    }
+  });
+
+  // Team invite endpoints
+  app.post("/api/teams/:teamId/invites", async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const { inviteeEmail } = req.body;
+      
+      // Generate unique invite code
+      const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      // Set expiration to 7 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      const invite = await storage.createTeamInvite({
+        teamId,
+        inviteCode,
+        inviterUserId: 1, // Using hardcoded user ID for now
+        inviteeEmail,
+        expiresAt
+      });
+
+      // Create invite link
+      const inviteLink = `${req.protocol}://${req.get('host')}/join/${inviteCode}`;
+
+      res.json({ 
+        invite, 
+        inviteLink,
+        message: "Invite created successfully" 
+      });
+    } catch (error) {
+      console.error("Invite creation error:", error);
+      res.status(500).json({ message: "Failed to create invite" });
+    }
+  });
+
+  app.get("/api/teams/:teamId/invites", async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const invites = await storage.getTeamInvites(teamId);
+      res.json(invites);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get team invites" });
+    }
+  });
+
+  app.get("/api/invites/:inviteCode", async (req, res) => {
+    try {
+      const { inviteCode } = req.params;
+      const invite = await storage.getTeamInvite(inviteCode);
+      
+      if (!invite) {
+        return res.status(404).json({ message: "Invite not found" });
+      }
+
+      if (invite.status !== 'pending') {
+        return res.status(400).json({ message: "Invite already used or expired" });
+      }
+
+      if (new Date() > invite.expiresAt) {
+        return res.status(400).json({ message: "Invite has expired" });
+      }
+
+      // Get team details
+      const team = await storage.getTeam(invite.teamId);
+      
+      res.json({ 
+        invite, 
+        team,
+        message: "Valid invite found" 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get invite details" });
+    }
+  });
+
+  app.post("/api/invites/:inviteCode/accept", async (req, res) => {
+    try {
+      const { inviteCode } = req.params;
+      const userId = 1; // Using hardcoded user ID for now
+      
+      const result = await storage.acceptTeamInvite(inviteCode, userId);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: "Failed to accept invite" });
+      }
+
+      res.json({ 
+        success: true, 
+        team: result.team,
+        message: "Successfully joined team!" 
+      });
+    } catch (error) {
+      console.error("Accept invite error:", error);
+      res.status(500).json({ message: "Failed to accept invite" });
+    }
   });
 
   app.get("/api/team/feed", async (req, res) => {

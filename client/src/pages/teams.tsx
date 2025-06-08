@@ -50,6 +50,16 @@ export default function Teams() {
     enabled: true,
   });
 
+  const { data: selectedTeamMembers = [], refetch: refetchMembers } = useQuery({
+    queryKey: ["/api/teams", selectedTeam?.id, "members"],
+    enabled: !!selectedTeam?.id,
+  });
+
+  const { data: selectedTeamProgress = [], refetch: refetchProgress } = useQuery({
+    queryKey: ["/api/teams", selectedTeam?.id, "progress"],
+    enabled: !!selectedTeam?.id,
+  });
+
   const createTeamMutation = useMutation({
     mutationFn: async (data: z.infer<typeof createTeamSchema>) => {
       return await apiRequest("POST", "/api/teams", data);
@@ -65,12 +75,27 @@ export default function Teams() {
 
   const createInviteMutation = useMutation({
     mutationFn: async ({ teamId, inviteeEmail }: { teamId: number; inviteeEmail: string }) => {
-      return await apiRequest("POST", "/api/invites", { teamId, inviteeEmail });
+      return await apiRequest("POST", `/api/teams/${teamId}/invites`, { inviteeEmail });
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      const data = response.json();
       toast({
-        title: "Invite Sent",
-        description: "Invitation has been created successfully!",
+        title: "Invite Created",
+        description: `Invitation created! Share this link: ${data.inviteLink}`,
+      });
+      
+      // Copy invite link to clipboard
+      if (data.inviteLink) {
+        navigator.clipboard.writeText(data.inviteLink);
+        setCopiedCode(data.invite.inviteCode);
+        setTimeout(() => setCopiedCode(null), 3000);
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create invite",
+        variant: "destructive",
       });
     },
   });
