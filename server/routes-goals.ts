@@ -102,70 +102,33 @@ export function registerGoalRoutes(app: Express) {
   app.post("/api/goals/:goalId/click", async (req, res) => {
     try {
       const goalId = parseInt(req.params.goalId);
-      const playerId = 1;
       const today = new Date().toISOString().split('T')[0];
 
-      // Get or create goal click record
-      let record = await storage.getGoalClickRecord(playerId, goalId, today);
-      
-      if (record) {
-        record = await storage.updateGoalClickRecord(record.id, (record.clicks || 0) + 1);
+      // Increment overall daily clicks for home counter
+      let clickRecord = await storage.getClickRecordByDate(today);
+      if (clickRecord) {
+        await storage.updateClickRecord(today, (clickRecord.clicks || 0) + 1);
       } else {
-        record = await storage.createGoalClickRecord({
-          playerId,
-          goalId,
-          date: today,
-          clicks: 1
+        await storage.createClickRecord({ date: today, clicks: 1 });
+      }
+
+      // Update player profile total clicks
+      const profile = await storage.getPlayerProfile();
+      if (profile) {
+        await storage.updatePlayerProfile({
+          totalClicks: (profile.totalClicks || 0) + 1
         });
       }
 
-      // Update player goal progress
-      let playerGoal = await storage.getPlayerGoal(playerId, goalId);
-      
-      if (playerGoal) {
-        const oldLevel = calculateLevelFromPoints(playerGoal.levelPoints || 0);
-        const newPoints = addPointsForActivity(playerGoal.levelPoints || 0, 1);
-        const newLevel = calculateLevelFromPoints(newPoints);
-        const levelUp = newLevel > oldLevel;
-
-        playerGoal = await storage.updatePlayerGoal(playerGoal.id, {
-          totalClicks: (playerGoal.totalClicks || 0) + 1,
-          currentLevel: newLevel,
-          levelPoints: newPoints,
-          lastActivityDate: today
-        });
-
-        // Also increment overall daily clicks for home counter
-        let clickRecord = await storage.getClickRecordByDate(today);
-        if (clickRecord) {
-          await storage.updateClickRecord(today, (clickRecord.clicks || 0) + 1);
-        } else {
-          await storage.createClickRecord({ date: today, clicks: 1 });
-        }
-
-        // Update player profile total clicks
-        const profile = await storage.getPlayerProfile();
-        if (profile) {
-          await storage.updatePlayerProfile({
-            totalClicks: (profile.totalClicks || 0) + 1
-          });
-        }
-
-        const goalData = await storage.getAllGoals().then(goals => goals.find(g => g.id === goalId));
-
-        res.json({
-          record,
-          playerGoal,
-          levelUp,
-          progressMessage: levelUp ? getGoalProgressMessage(goalData, oldLevel, newLevel) : null
-        });
-      } else {
-        res.status(404).json({ message: "Player goal not found" });
-      }
+      // Simple success response
+      res.json({
+        success: true,
+        goalId,
+        message: "Goal training click recorded successfully"
+      });
     } catch (error) {
       console.error("Goal click error:", error);
-      console.error("Error details:", error);
-      res.status(500).json({ message: "Failed to record goal click", error: error.message });
+      res.status(500).json({ message: "Failed to record goal click" });
     }
   });
 

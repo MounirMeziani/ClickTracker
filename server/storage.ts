@@ -285,32 +285,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlayerGoals(playerId: number): Promise<PlayerGoal[]> {
-    const results = await db.select({
-      id: playerGoals.id,
-      playerId: playerGoals.playerId,
-      goalId: playerGoals.goalId,
-      currentLevel: playerGoals.currentLevel,
-      totalClicks: playerGoals.totalClicks,
-      levelPoints: playerGoals.levelPoints,
-      weeklyTarget: playerGoals.weeklyTarget,
-      lastActivityDate: playerGoals.lastActivityDate,
-      createdAt: playerGoals.createdAt,
-      updatedAt: playerGoals.updatedAt,
-      goal: {
-        id: goals.id,
-        name: goals.name,
-        description: goals.description,
-        category: goals.category,
-        maxLevel: goals.maxLevel
-      }
-    })
-    .from(playerGoals)
-    .leftJoin(goals, eq(playerGoals.goalId, goals.id))
-    .where(eq(playerGoals.playerId, playerId));
+    const results = await db.select()
+      .from(playerGoals)
+      .leftJoin(goals, eq(playerGoals.goalId, goals.id))
+      .where(eq(playerGoals.playerId, playerId));
     
     return results.map(row => ({
-      ...row,
-      goal: row.goal.id ? row.goal : undefined
+      ...row.player_goals,
+      goal: row.goals || undefined
     })) as PlayerGoal[];
   }
 

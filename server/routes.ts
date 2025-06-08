@@ -644,6 +644,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Goal click tracking for specific goals
+  app.post("/api/goals/:goalId/click", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const profile = await storage.getPlayerProfile();
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Player profile not found" });
+      }
+
+      // Update click records
+      const today = new Date().toISOString().split('T')[0];
+      let record = await storage.getClickRecordByDate(today);
+      
+      if (record) {
+        record = await storage.updateClickRecord(today, record.clicks + 1);
+      } else {
+        record = await storage.createClickRecord({ date: today, clicks: 1 });
+      }
+
+      // Update player profile
+      const newTotalClicks = profile.totalClicks + 1;
+      const oldLevel = calculateLevel(profile.totalClicks);
+      const newLevel = calculateLevel(newTotalClicks);
+      
+      const updatedProfile = await storage.updatePlayerProfile({
+        totalClicks: newTotalClicks,
+        currentLevel: newLevel
+      });
+      
+      const levelUp = newLevel > oldLevel;
+        
+      res.json({
+        record,
+        playerGoal: {
+          ...updatedProfile,
+          goalId,
+          levelPoints: newTotalClicks * 1.2
+        },
+        levelUp,
+        progressMessage: levelUp ? `Great progress! You've improved your training level!` : null
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to record goal click" });
+    }
+  });
+
+  // Update goal name
+  app.patch("/api/goals/:goalId", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const { name } = req.body;
+      
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+
+      // Update goal in database
+      const updatedGoal = await storage.updateGoal(goalId, { name: name.trim() });
+      
+      res.json({ success: true, goal: updatedGoal });
+    } catch (error) {
+      console.error("Goal update error:", error);
+      res.status(500).json({ message: "Failed to update goal" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
