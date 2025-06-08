@@ -419,14 +419,21 @@ export default function Home() {
               <p className="text-sm">
                 {gameData?.levelData?.description || "Just starting your basketball journey"}
               </p>
-              {gameData?.nextLevelData && (
+              {(currentGoal || gameData?.nextLevelData) && (
                 <div className="mt-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span>Progress: {currentGoal ? currentGoal.name : gameData.nextLevelData.name}</span>
-                    <span>{currentGoal ? currentGoal.totalClicks || 0 : gameData.profile.totalClicks} / {gameData.nextLevelData.clicksRequired}</span>
+                    <span>Progress: {currentGoal ? currentGoal.name : gameData?.nextLevelData?.name}</span>
+                    <span>
+                      {currentGoal ? 
+                        `${currentGoal.totalClicks || 0} / ${currentGoal.weeklyTarget || 100}` : 
+                        `${gameData?.profile?.totalClicks || 0} / ${gameData?.nextLevelData?.clicksRequired || 100}`
+                      }
+                    </span>
                   </div>
                   <Progress 
-                    value={Math.min(((currentGoal ? currentGoal.totalClicks || 0 : gameData.profile.totalClicks) / gameData.nextLevelData.clicksRequired) * 100, 100)} 
+                    value={Math.min(currentGoal ? 
+                      ((currentGoal.totalClicks || 0) / (currentGoal.weeklyTarget || 100)) * 100 :
+                      ((gameData?.profile?.totalClicks || 0) / (gameData?.nextLevelData?.clicksRequired || 100)) * 100, 100)} 
                     className="h-2"
                   />
                 </div>
