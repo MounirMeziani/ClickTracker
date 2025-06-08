@@ -151,28 +151,26 @@ export default function Home() {
     queryKey: ["/api/challenge/daily"],
   });
 
-  const { data: playerGoals } = useQuery({
-    queryKey: ["/api/player/goals"],
-  });
-
   const { data: goals } = useQuery({
     queryKey: ["/api/goals"],
   });
 
-  // Use the first goal as active goal if no explicit active goal is set
-  const activeGoal = Array.isArray(playerGoals) ? (playerGoals.find((pg: any) => pg.isActive) || playerGoals[0]) : null;
-  const activeGoalData = Array.isArray(goals) ? goals.find((g: any) => g.id === activeGoal?.goalId) : null;
+  const { data: activeGoal } = useQuery({
+    queryKey: ["/api/goals/active"],
+  });
+
+  // Use first goal as fallback if no active goal is set
+  const currentGoal = activeGoal || (Array.isArray(goals) && goals.length > 0 ? goals[0] : null);
 
   const incrementMutation = useMutation({
     mutationFn: () => {
       console.log("=== HOME INCREMENT MUTATION START ===");
-      console.log("Active goal:", activeGoal);
-      console.log("Player goals:", playerGoals);
+      console.log("Current goal:", currentGoal);
       
-      // Use goal-specific endpoint if there's an active goal
-      if (activeGoal?.goalId) {
-        console.log("Using goal-specific endpoint for goal ID:", activeGoal.goalId);
-        return fetch(`/api/goals/${activeGoal.goalId}/click`, { method: "POST" }).then(res => {
+      // Use goal-specific endpoint if there's a current goal
+      if (currentGoal?.id) {
+        console.log("Using goal-specific endpoint for goal ID:", currentGoal.id);
+        return fetch(`/api/goals/${currentGoal.id}/click`, { method: "POST" }).then(res => {
           console.log("Goal-specific response status:", res.status);
           return res.json();
         });
@@ -435,29 +433,29 @@ export default function Home() {
 
 
       {/* Active Goal */}
-      {activeGoalData && (
+      {currentGoal && (
         <section className="mb-8">
           <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center text-blue-800">
                 <Target className="mr-2" size={20} />
-                Active Focus: {activeGoalData.name}
+                Active Focus: {currentGoal.name}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-blue-900">{activeGoalData.description}</p>
+                  <p className="font-medium text-blue-900">{currentGoal.description}</p>
                   <p className="text-sm text-blue-700 mt-1">
-                    Level {activeGoal?.currentLevel || 1} • {activeGoal?.totalPoints || 0} points
+                    Level {currentGoal?.currentLevel || 1} • {currentGoal?.totalClicks || 0} clicks
                   </p>
                   <div className="mt-2">
                     <div className="flex justify-between text-xs mb-1">
                       <span>Weekly Target Progress</span>
-                      <span>{todayData?.clicks || 0} / {activeGoal?.weeklyTarget || 100}</span>
+                      <span>{todayData?.clicks || 0} / {currentGoal?.weeklyTarget || 100}</span>
                     </div>
                     <Progress 
-                      value={Math.min(((todayData?.clicks || 0) / (activeGoal?.weeklyTarget || 100)) * 100, 100)} 
+                      value={Math.min(((todayData?.clicks || 0) / (currentGoal?.weeklyTarget || 100)) * 100, 100)} 
                       className="h-2"
                     />
                   </div>
