@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Copy, Users, Plus, Share2, Check } from "lucide-react";
+import { Copy, Users, Plus, Share2, Check, Home, Target, Activity } from "lucide-react";
+import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -129,6 +130,28 @@ export default function Teams() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Navigation */}
+      <nav className="flex items-center gap-4 mb-6">
+        <Link href="/">
+          <Button variant="outline" size="sm">
+            <Home className="mr-2" size={16} />
+            Home
+          </Button>
+        </Link>
+        <Link href="/goals">
+          <Button variant="outline" size="sm">
+            <Target className="mr-2" size={16} />
+            Goals
+          </Button>
+        </Link>
+        <Link href="/social">
+          <Button variant="outline" size="sm">
+            <Activity className="mr-2" size={16} />
+            Social
+          </Button>
+        </Link>
+      </nav>
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Application Teams</h1>
