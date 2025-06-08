@@ -180,6 +180,55 @@ export function registerGoalRoutes(app: Express) {
     }
   });
 
+  // Decrement goal-specific click
+  app.post("/api/goals/:goalId/decrement", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const today = new Date().toISOString().split('T')[0];
+
+      // Decrement goal-specific click record
+      let goalClickRecord = await storage.getGoalClickRecord(1, goalId, today);
+      
+      if (goalClickRecord && goalClickRecord.clicks > 0) {
+        goalClickRecord = await storage.updateGoalClickRecord(goalClickRecord.id, goalClickRecord.clicks - 1);
+      }
+
+      // Update player goal progress (decrease points and possibly level)
+      const playerGoal = await storage.getPlayerGoal(1, goalId);
+      if (playerGoal && playerGoal.totalClicks > 0) {
+        await storage.updatePlayerGoal(playerGoal.id, {
+          totalClicks: Math.max(0, playerGoal.totalClicks - 1),
+          levelPoints: Math.max(0, playerGoal.levelPoints - 1)
+        });
+      }
+
+      // Decrement overall daily clicks for home counter
+      let clickRecord = await storage.getClickRecordByDate(today);
+      
+      if (clickRecord && clickRecord.clicks > 0) {
+        clickRecord = await storage.updateClickRecord(today, clickRecord.clicks - 1);
+      }
+
+      // Update player profile total clicks
+      const profile = await storage.getPlayerProfile();
+      
+      if (profile && profile.totalClicks > 0) {
+        await storage.updatePlayerProfile({
+          totalClicks: Math.max(0, profile.totalClicks - 1)
+        });
+      }
+
+      res.json({
+        success: true,
+        goalId,
+        message: "Goal training click decremented successfully"
+      });
+    } catch (error: any) {
+      console.error("Goal decrement error:", error);
+      res.status(500).json({ message: "Failed to decrement goal click" });
+    }
+  });
+
   // Get goal statistics
   app.get("/api/goals/:goalId/stats", async (req, res) => {
     try {

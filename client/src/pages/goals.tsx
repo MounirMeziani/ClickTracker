@@ -114,6 +114,25 @@ export default function Goals() {
     },
   });
 
+  const decrementMutation = useMutation({
+    mutationFn: async (goalId: number) => {
+      const response = await fetch(`/api/goals/${goalId}/decrement`, { method: "POST" });
+      if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/player/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/weekly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/monthly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clicks/all-time"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/player/profile"] });
+      if (selectedGoalId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/goals", selectedGoalId, "stats"] });
+      }
+    },
+  });
+
   const switchGoalMutation = useMutation({
     mutationFn: async (goalId: number) => {
       const response = await fetch("/api/player/active-goal", {
@@ -411,14 +430,25 @@ export default function Goals() {
               {/* Action Button */}
               {selectedGoalId && (
                 <div className="mt-4 space-y-2">
-                  <Button
-                    onClick={() => selectedGoalId && trainMutation.mutate(selectedGoalId)}
-                    disabled={trainMutation.isPending || !selectedGoalId}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  >
-                    <Activity className="mr-2" size={16} />
-                    {trainMutation.isPending ? "Training..." : "Train Now"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => selectedGoalId && trainMutation.mutate(selectedGoalId)}
+                      disabled={trainMutation.isPending || !selectedGoalId}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    >
+                      <Activity className="mr-2" size={16} />
+                      {trainMutation.isPending ? "Training..." : "Train Now"}
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => selectedGoalId && decrementMutation.mutate(selectedGoalId)}
+                      disabled={decrementMutation.isPending || !selectedGoalId}
+                      className="px-4 border-red-200 text-red-600 hover:bg-red-50"
+                    >
+                      Remove
+                    </Button>
+                  </div>
                   
                   <Button
                     variant="outline"
