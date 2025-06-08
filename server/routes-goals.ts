@@ -12,6 +12,41 @@ import {
 } from "./goalSystem";
 
 export function registerGoalRoutes(app: Express) {
+  // Create a new goal
+  app.post("/api/goals", async (req, res) => {
+    try {
+      const { name, description, category } = req.body;
+      
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+
+      const newGoal = await storage.createGoal({
+        name: name.trim(),
+        description: description || "Custom goal",
+        category: category || "productivity"
+      });
+
+      // Also create a player goal for the new goal
+      const profile = await storage.getPlayerProfile();
+      if (profile) {
+        await storage.createPlayerGoal({
+          playerId: 1, // Default player ID
+          goalId: newGoal.id,
+          currentLevel: 1,
+          totalClicks: 0,
+          levelPoints: 0,
+          weeklyTarget: 50
+        });
+      }
+
+      res.json({ success: true, goal: newGoal });
+    } catch (error: any) {
+      console.error("Goal creation error:", error);
+      res.status(500).json({ message: "Failed to create goal" });
+    }
+  });
+
   // Get all available goals
   app.get("/api/goals", async (req, res) => {
     try {
@@ -247,6 +282,37 @@ export function registerGoalRoutes(app: Express) {
     } catch (error) {
       console.error("Goal update error:", error);
       res.status(500).json({ message: "Failed to update goal" });
+    }
+  });
+
+  // Delete goal
+  app.delete("/api/goals/:goalId", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      
+      // First check if goal exists
+      const goals = await storage.getAllGoals();
+      const goalExists = goals.find(g => g.id === goalId);
+      
+      if (!goalExists) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+
+      // Delete player goals first (foreign key constraint)
+      const playerGoals = await storage.getPlayerGoals(1);
+      const playerGoal = playerGoals.find(pg => pg.goalId === goalId);
+      
+      if (playerGoal) {
+        await storage.deletePlayerGoal(playerGoal.id);
+      }
+      
+      // Then delete the goal
+      await storage.deleteGoal(goalId);
+      
+      res.json({ success: true, message: "Goal deleted successfully" });
+    } catch (error: any) {
+      console.error("Goal deletion error:", error);
+      res.status(500).json({ message: "Failed to delete goal" });
     }
   });
 }

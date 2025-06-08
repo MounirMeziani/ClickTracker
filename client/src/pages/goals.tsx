@@ -254,9 +254,27 @@ export default function Goals() {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Trophy className="mr-2" size={20} />
-                Your Goals
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Trophy className="mr-2" size={20} />
+                  Your Goals
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const newGoalName = prompt("Enter goal name:");
+                    if (newGoalName?.trim()) {
+                      createGoalMutation.mutate({
+                        name: newGoalName.trim(),
+                        description: "Custom productivity goal",
+                        category: "productivity"
+                      });
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  + New Goal
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
