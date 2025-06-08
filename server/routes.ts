@@ -17,6 +17,7 @@ import {
   getActivityColor,
   calculateWeeklyStreak
 } from "./socialSystem";
+import { registerGoalRoutes } from "./routes-goals";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
