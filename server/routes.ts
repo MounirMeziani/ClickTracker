@@ -397,33 +397,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(501).json({ message: "Teams feature coming soon" });
   });
 
-  // Join a team (simple version)
+  // Join a team (placeholder)
   app.post("/api/team/join", async (req, res) => {
-    try {
-      const { teamId } = req.body;
-      const profile = await storage.getPlayerProfile();
-      
-      if (!profile) {
-        return res.status(404).json({ message: "Player profile not found" });
-      }
-
-      if (profile.teamId) {
-        return res.status(400).json({ message: "Already on a team" });
-      }
-
-      // Join the team
-      await storage.joinTeam(teamId, profile.id);
-      
-      // Update player profile with team ID
-      await storage.updatePlayerProfile({
-        ...profile,
-        teamId: teamId
-      });
-
-      res.json({ message: "Successfully joined team" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to join team" });
-    }
+    res.status(501).json({ message: "Teams feature coming soon" });
   });
 
   // Simplified goal management routes
