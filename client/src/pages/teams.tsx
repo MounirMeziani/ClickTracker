@@ -327,6 +327,50 @@ export default function Teams() {
                 Create Your First Team
               </Button>
             </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Team</DialogTitle>
+                <DialogDescription>
+                  Start a new team to collaborate on job applications with friends and colleagues.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...createTeamForm}>
+                <form onSubmit={createTeamForm.handleSubmit(handleCreateTeam)} className="space-y-4">
+                  <FormField
+                    control={createTeamForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Team Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Job Hunt Squad" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createTeamForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="A supportive group focused on landing our dream jobs in tech"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={createTeamMutation.isPending}>
+                    {createTeamMutation.isPending ? "Creating..." : "Create Team"}
+                  </Button>
+                </form>
+              </Form>
+            </DialogContent>
           </Dialog>
         </div>
       )}
