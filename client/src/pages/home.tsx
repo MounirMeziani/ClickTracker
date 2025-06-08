@@ -520,7 +520,7 @@ export default function Home() {
                   <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
                   <Minus className="relative z-10" size={24} />
                 </Button>
-                <span className="text-xs text-text-secondary font-medium">Remove</span>
+                <span className="text-xs text-text-secondary font-medium">Remove {currentGoal ? currentGoal.name : 'Shot'}</span>
               </div>
 
               {/* Main Click Button */}
@@ -551,7 +551,7 @@ export default function Home() {
                     ></div>
                   )}
                 </div>
-                <span className="text-sm text-text-secondary font-medium">Shoot the Ball</span>
+                <span className="text-sm text-text-secondary font-medium">{currentGoal ? `Work on ${currentGoal.name}` : 'Shoot the Ball'}</span>
               </div>
 
               {/* Increase Button */}
@@ -566,15 +566,17 @@ export default function Home() {
                   <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
                   <Plus className="relative z-10" size={24} />
                 </Button>
-                <span className="text-xs text-text-secondary font-medium">Add</span>
+                <span className="text-xs text-text-secondary font-medium">Add {currentGoal ? currentGoal.name : 'Shot'}</span>
               </div>
             </div>
 
             {/* Today's Count */}
             <div className="mb-4">
-              <h2 className="text-text-secondary text-lg font-medium mb-2">Today's Shots</h2>
+              <h2 className="text-text-secondary text-lg font-medium mb-2">
+                {currentGoal ? `Today's ${currentGoal.name}` : "Today's Shots"}
+              </h2>
               <div className="text-5xl md:text-6xl font-bold text-text-primary">
-                {todayData?.clicks || 0}
+                {goalTodayData?.clicks || 0}
               </div>
             </div>
 
@@ -592,7 +594,7 @@ export default function Home() {
               <div className="inline-flex items-center bg-primary/10 text-primary px-4 py-2 rounded-full">
                 <Star className="mr-2" size={16} />
                 <span className="font-medium">
-                  {gameData?.profile?.totalClicks || 0} career shots
+                  {currentGoal ? `${currentGoal.totalClicks || 0} total ${currentGoal.name}` : `${gameData?.profile?.totalClicks || 0} career shots`}
                 </span>
               </div>
             </div>
