@@ -220,6 +220,7 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals/active/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals/active/last-7-days"] });
       
       // Show level up notification
       if (data.levelUp && data.levelData) {

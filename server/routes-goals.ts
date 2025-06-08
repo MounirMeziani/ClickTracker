@@ -1,7 +1,9 @@
 import type { Express } from "express";
 import { storage } from "./storage";
-import { insertGoalSchema } from "@shared/schema";
+import { insertGoalSchema, goalClickRecords } from "@shared/schema";
 import { calculateLevelFromPoints } from "./goalSystem";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 const PLAYER_ID = 1; // Hardcoded for single-player mode
 
@@ -80,13 +82,19 @@ export function registerGoalRoutes(app: Express) {
       const goalId = parseInt(req.params.id);
       console.log("Deleting goal ID:", goalId);
       
+      // First delete associated goal click records
+      const { goalClickRecords: goalClickRecordsTable } = await import("@shared/schema");
+      await db.delete(goalClickRecordsTable).where(eq(goalClickRecordsTable.goalId, goalId));
+      console.log("Deleted goal click records");
+      
+      // Then delete the goal
       await storage.deleteGoal(goalId);
       console.log("Goal deleted successfully");
       
       res.json({ success: true, message: "Goal deleted" });
     } catch (error) {
       console.error("Error deleting goal:", error);
-      res.status(500).json({ message: "Failed to delete goal" });
+      res.status(500).json({ message: "Failed to delete goal", error: error.message });
     }
   });
 
