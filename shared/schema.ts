@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, integer, timestamp, date, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, integer, timestamp, date, boolean, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -70,38 +70,25 @@ export const teamActivity = pgTable("team_activity", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Clean goals system - each goal is independent
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
+  playerId: integer("player_id").notNull(), // Each goal belongs to a player
+  name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  category: varchar("category", { length: 50 }).notNull(),
-  maxLevel: integer("max_level").default(12),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const playerGoals = pgTable("player_goals", {
-  id: serial("id").primaryKey(),
-  playerId: integer("player_id").notNull(),
-  goalId: integer("goal_id").notNull().references(() => goals.id),
-  currentLevel: integer("current_level").default(1),
+  category: varchar("category", { length: 100 }).default("general"),
+  isActive: boolean("is_active").default(false), // Only one active goal per player
   totalClicks: integer("total_clicks").default(0),
-  currentSkin: varchar("current_skin", { length: 50 }).default("rookie"),
-  unlockedSkins: text("unlocked_skins").array().default([]),
-  achievements: text("achievements").array().default([]),
-  streakCount: integer("streak_count").default(0),
-  dailyChallengeCompleted: boolean("daily_challenge_completed").default(false),
-  lastChallengeDate: varchar("last_challenge_date"),
-  lastActivityDate: varchar("last_activity_date"),
-  weeklyTarget: integer("weekly_target").default(0),
+  currentLevel: integer("current_level").default(1),
   levelPoints: integer("level_points").default(0),
+  weeklyTarget: integer("weekly_target").default(100),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const goalClickRecords = pgTable("goal_click_records", {
   id: serial("id").primaryKey(),
-  playerId: integer("player_id").notNull(),
-  goalId: integer("goal_id").notNull().references(() => goals.id),
+  goalId: integer("goal_id").notNull().references(() => goals.id, { onDelete: "cascade" }),
   date: varchar("date", { length: 10 }).notNull(),
   clicks: integer("clicks").default(0),
   createdAt: timestamp("created_at").defaultNow(),
@@ -159,30 +146,14 @@ export const insertTeamActivitySchema = createInsertSchema(teamActivity).pick({
 });
 
 export const insertGoalSchema = createInsertSchema(goals).pick({
+  playerId: true,
   name: true,
   description: true,
   category: true,
-  maxLevel: true,
-});
-
-export const insertPlayerGoalSchema = createInsertSchema(playerGoals).pick({
-  playerId: true,
-  goalId: true,
-  currentLevel: true,
-  totalClicks: true,
-  currentSkin: true,
-  unlockedSkins: true,
-  achievements: true,
-  streakCount: true,
-  dailyChallengeCompleted: true,
-  lastChallengeDate: true,
-  lastActivityDate: true,
   weeklyTarget: true,
-  levelPoints: true,
 });
 
 export const insertGoalClickRecordSchema = createInsertSchema(goalClickRecords).pick({
-  playerId: true,
   goalId: true,
   date: true,
   clicks: true,
@@ -206,7 +177,5 @@ export type TeamActivity = typeof teamActivity.$inferSelect;
 export type InsertTeamActivity = z.infer<typeof insertTeamActivitySchema>;
 export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
-export type PlayerGoal = typeof playerGoals.$inferSelect;
-export type InsertPlayerGoal = z.infer<typeof insertPlayerGoalSchema>;
 export type GoalClickRecord = typeof goalClickRecords.$inferSelect;
 export type InsertGoalClickRecord = z.infer<typeof insertGoalClickRecordSchema>;
