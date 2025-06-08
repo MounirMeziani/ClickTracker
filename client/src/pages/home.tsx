@@ -234,12 +234,11 @@ export default function Home() {
     mutationFn: () => {
       console.log("=== HOME DECREMENT MUTATION START ===");
       console.log("Active goal:", activeGoal);
-      console.log("Player goals:", playerGoals);
       
       // Use goal-specific endpoint if there's an active goal
-      if (activeGoal?.goalId) {
-        console.log("Using goal-specific decrement endpoint for goal ID:", activeGoal.goalId);
-        return fetch(`/api/goals/${activeGoal.goalId}/decrement`, { method: "POST" }).then(res => {
+      if (activeGoal?.id) {
+        console.log("Using goal-specific decrement endpoint for goal ID:", activeGoal.id);
+        return fetch(`/api/goals/${activeGoal.id}/decrement`, { method: "POST" }).then(res => {
           console.log("Goal-specific decrement response status:", res.status);
           return res.json();
         });
