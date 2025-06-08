@@ -329,62 +329,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/team/info", async (req, res) => {
     try {
       const currentProfile = await storage.getPlayerProfile();
-      if (!currentProfile?.teamId) {
-        return res.json({
-          hasTeam: false,
-          currentPlayer: currentProfile,
-          team: null,
-          teammates: [],
-          leaderboard: []
-        });
-      }
-
-      const team = await storage.getPlayerTeam(currentProfile.id);
-      const teammates = await storage.getTeamMembers(currentProfile.teamId);
-      const leaderboard = await storage.getTeamLeaderboard(currentProfile.teamId);
-      
       res.json({
-        hasTeam: true,
+        hasTeam: false,
         currentPlayer: currentProfile,
-        team,
-        teammates,
-        leaderboard
+        team: null,
+        teammates: [],
+        leaderboard: []
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to get team info" });
     }
   });
 
-  // Get team feed with motivational messages
+  // Teams endpoints (simplified for now)
+  app.get("/api/teams/user/:userId", async (req, res) => {
+    res.json([]);
+  });
+
+  app.post("/api/teams", async (req, res) => {
+    res.status(501).json({ message: "Teams feature coming soon" });
+  });
+
+  app.post("/api/teams/:teamId/join", async (req, res) => {
+    res.status(501).json({ message: "Teams feature coming soon" });
+  });
+
   app.get("/api/team/feed", async (req, res) => {
     try {
-      const currentProfile = await storage.getPlayerProfile();
       const motivationalMessage = generateMotivationalMessage();
-      
-      const feed = [];
-      
-      // Add team activity if player has a team
-      if (currentProfile?.teamId) {
-        const teamActivity = await storage.getTeamActivity(currentProfile.teamId, 7);
-        feed.push(...teamActivity.slice(0, 3).map(activity => ({
-          id: activity.id,
-          type: 'team_activity',
-          message: activity.description,
-          timestamp: activity.createdAt.toISOString(),
-          playerId: activity.playerId
-        })));
-      }
-
-      // Always add motivational message
-      feed.push({
+      res.json([{
         id: 999,
         type: 'motivational',
         message: motivationalMessage,
         timestamp: new Date().toISOString(),
         playerId: null
-      });
-
-      res.json(feed);
+      }]);
     } catch (error) {
       res.status(500).json({ message: "Failed to get team feed" });
     }
@@ -413,25 +392,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a basic team
+  // Create a basic team (placeholder)
   app.post("/api/team/create", async (req, res) => {
-    try {
-      const { name, description } = req.body;
-      
-      if (!name) {
-        return res.status(400).json({ message: "Team name is required" });
-      }
-
-      const team = await storage.createTeam({
-        name,
-        description: description || "A basketball training team",
-        maxMembers: 10
-      });
-
-      res.json({ team, message: "Team created successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to create team" });
-    }
+    res.status(501).json({ message: "Teams feature coming soon" });
   });
 
   // Join a team (simple version)
