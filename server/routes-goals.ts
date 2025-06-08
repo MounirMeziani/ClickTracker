@@ -138,6 +138,22 @@ export function registerGoalRoutes(app: Express) {
           lastActivityDate: today
         });
 
+        // Also increment overall daily clicks for home counter
+        let clickRecord = await storage.getClickRecordByDate(today);
+        if (clickRecord) {
+          await storage.updateClickRecord(today, (clickRecord.clicks || 0) + 1);
+        } else {
+          await storage.createClickRecord({ date: today, clicks: 1 });
+        }
+
+        // Update player profile total clicks
+        const profile = await storage.getPlayerProfile();
+        if (profile) {
+          await storage.updatePlayerProfile({
+            totalClicks: (profile.totalClicks || 0) + 1
+          });
+        }
+
         const goalData = Object.values(BASKETBALL_GOALS).find(g => g.id === goalId);
 
         res.json({
@@ -177,7 +193,7 @@ export function registerGoalRoutes(app: Express) {
       const goalData = Object.values(BASKETBALL_GOALS).find(g => g.id === goalId);
 
       // Calculate weekly progress
-      const weeklyClicks = records.reduce((sum, record) => sum + record.clicks, 0);
+      const weeklyClicks = records.reduce((sum, record) => sum + (record.clicks || 0), 0);
       const weeklyTarget = playerGoal?.weeklyTarget || 0;
       const progressPercentage = weeklyTarget > 0 ? (weeklyClicks / weeklyTarget) * 100 : 0;
 
@@ -237,6 +253,26 @@ export function registerGoalRoutes(app: Express) {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to switch goal" });
+    }
+  });
+
+  // Update goal name
+  app.patch("/api/goals/:goalId", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const { name } = req.body;
+      
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+
+      // Update goal in database
+      const updatedGoal = await storage.updateGoal(goalId, { name: name.trim() });
+      
+      res.json({ success: true, goal: updatedGoal });
+    } catch (error) {
+      console.error("Goal update error:", error);
+      res.status(500).json({ message: "Failed to update goal" });
     }
   });
 }

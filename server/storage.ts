@@ -67,6 +67,7 @@ export interface IStorage {
   // Goal management
   getAllGoals(): Promise<Goal[]>;
   createGoal(goal: InsertGoal): Promise<Goal>;
+  updateGoal(id: number, updates: Partial<Goal>): Promise<Goal>;
   getPlayerGoals(playerId: number): Promise<PlayerGoal[]>;
   getPlayerGoal(playerId: number, goalId: number): Promise<PlayerGoal | undefined>;
   createPlayerGoal(playerGoal: InsertPlayerGoal): Promise<PlayerGoal>;
@@ -272,6 +273,15 @@ export class DatabaseStorage implements IStorage {
       .values(goal)
       .returning();
     return newGoal;
+  }
+
+  async updateGoal(id: number, updates: Partial<Goal>): Promise<Goal> {
+    const [updatedGoal] = await db
+      .update(goals)
+      .set(updates)
+      .where(eq(goals.id, id))
+      .returning();
+    return updatedGoal;
   }
 
   async getPlayerGoals(playerId: number): Promise<PlayerGoal[]> {
