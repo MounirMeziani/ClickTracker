@@ -153,15 +153,18 @@ export default function Home() {
 
   const { data: goals } = useQuery({
     queryKey: ["/api/goals"],
+    refetchOnMount: "always",
   });
 
   const { data: activeGoal } = useQuery({
     queryKey: ["/api/goals/active"],
+    refetchOnMount: "always",
   });
 
   const { data: goalTodayData } = useQuery({
     queryKey: ["/api/goals/active/today"],
     enabled: !!activeGoal,
+    refetchOnMount: "always",
   });
 
   // Use first goal as fallback if no active goal is set
