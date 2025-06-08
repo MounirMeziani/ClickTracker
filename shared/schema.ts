@@ -142,6 +142,7 @@ export const insertDailyChallengeSchema = createInsertSchema(dailyChallenges).pi
 export const insertTeamSchema = createInsertSchema(teams).pick({
   name: true,
   description: true,
+  ownerId: true,
   maxMembers: true,
 });
 

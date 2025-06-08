@@ -365,6 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const team = await storage.createTeam({
         name,
         description: description || "",
+        ownerId: 1, // Using hardcoded user ID for now
         maxMembers: 10
       });
 

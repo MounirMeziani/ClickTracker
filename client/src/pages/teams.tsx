@@ -62,6 +62,7 @@ export default function Teams() {
 
   const createTeamMutation = useMutation({
     mutationFn: async (data: z.infer<typeof createTeamSchema>) => {
+      console.log("Creating team with data:", data);
       return await apiRequest("POST", "/api/teams", data);
     },
     onSuccess: () => {
