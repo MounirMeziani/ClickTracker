@@ -14,10 +14,7 @@ export function registerGoalRoutes(app: Express) {
   // Get all available goals
   app.get("/api/goals", async (req, res) => {
     try {
-      const goals = Object.values(BASKETBALL_GOALS).map(goal => ({
-        ...goal,
-        category: GOAL_CATEGORIES[goal.category as keyof typeof GOAL_CATEGORIES]
-      }));
+      const goals = await storage.getAllGoals();
       res.json(goals);
     } catch (error) {
       res.status(500).json({ message: "Failed to get goals" });
@@ -154,7 +151,7 @@ export function registerGoalRoutes(app: Express) {
           });
         }
 
-        const goalData = Object.values(BASKETBALL_GOALS).find(g => g.id === goalId);
+        const goalData = await storage.getAllGoals().then(goals => goals.find(g => g.id === goalId));
 
         res.json({
           record,
