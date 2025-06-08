@@ -52,7 +52,7 @@ export default function Teams() {
 
   const createTeamMutation = useMutation({
     mutationFn: async (data: z.infer<typeof createTeamSchema>) => {
-      return await apiRequest("/api/teams", "POST", data);
+      return await apiRequest("POST", "/api/teams", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
@@ -65,7 +65,7 @@ export default function Teams() {
 
   const createInviteMutation = useMutation({
     mutationFn: async ({ teamId, inviteeEmail }: { teamId: number; inviteeEmail: string }) => {
-      return await apiRequest("/api/invites", "POST", { teamId, inviteeEmail });
+      return await apiRequest("POST", "/api/invites", { teamId, inviteeEmail });
     },
     onSuccess: () => {
       toast({
