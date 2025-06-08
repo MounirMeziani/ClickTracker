@@ -249,6 +249,88 @@ export class DatabaseStorage implements IStorage {
       rank: index + 1
     }));
   }
+
+  // Goal management methods
+  async getAllGoals(): Promise<Goal[]> {
+    return await db.select().from(goals);
+  }
+
+  async createGoal(goal: InsertGoal): Promise<Goal> {
+    const [newGoal] = await db
+      .insert(goals)
+      .values(goal)
+      .returning();
+    return newGoal;
+  }
+
+  async getPlayerGoals(playerId: number): Promise<PlayerGoal[]> {
+    return await db.select().from(playerGoals).where(eq(playerGoals.playerId, playerId));
+  }
+
+  async getPlayerGoal(playerId: number, goalId: number): Promise<PlayerGoal | undefined> {
+    const [playerGoal] = await db.select()
+      .from(playerGoals)
+      .where(and(eq(playerGoals.playerId, playerId), eq(playerGoals.goalId, goalId)));
+    return playerGoal;
+  }
+
+  async createPlayerGoal(playerGoal: InsertPlayerGoal): Promise<PlayerGoal> {
+    const [newPlayerGoal] = await db
+      .insert(playerGoals)
+      .values(playerGoal)
+      .returning();
+    return newPlayerGoal;
+  }
+
+  async updatePlayerGoal(id: number, updates: Partial<PlayerGoal>): Promise<PlayerGoal> {
+    const [updatedPlayerGoal] = await db
+      .update(playerGoals)
+      .set(updates)
+      .where(eq(playerGoals.id, id))
+      .returning();
+    return updatedPlayerGoal;
+  }
+
+  // Goal click tracking methods
+  async getGoalClickRecord(playerId: number, goalId: number, date: string): Promise<GoalClickRecord | undefined> {
+    const [record] = await db.select()
+      .from(goalClickRecords)
+      .where(and(
+        eq(goalClickRecords.playerId, playerId),
+        eq(goalClickRecords.goalId, goalId),
+        eq(goalClickRecords.date, date)
+      ));
+    return record;
+  }
+
+  async createGoalClickRecord(record: InsertGoalClickRecord): Promise<GoalClickRecord> {
+    const [newRecord] = await db
+      .insert(goalClickRecords)
+      .values(record)
+      .returning();
+    return newRecord;
+  }
+
+  async updateGoalClickRecord(id: number, clicks: number): Promise<GoalClickRecord> {
+    const [updatedRecord] = await db
+      .update(goalClickRecords)
+      .set({ clicks })
+      .where(eq(goalClickRecords.id, id))
+      .returning();
+    return updatedRecord;
+  }
+
+  async getGoalClickRecords(playerId: number, goalId: number, startDate: string, endDate: string): Promise<GoalClickRecord[]> {
+    return await db.select()
+      .from(goalClickRecords)
+      .where(and(
+        eq(goalClickRecords.playerId, playerId),
+        eq(goalClickRecords.goalId, goalId),
+        gte(goalClickRecords.date, startDate),
+        lte(goalClickRecords.date, endDate)
+      ))
+      .orderBy(desc(goalClickRecords.date));
+  }
 }
 
 export const storage = new DatabaseStorage();
