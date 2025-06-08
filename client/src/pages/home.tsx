@@ -291,6 +291,7 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals/active/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals/active/last-7-days"] });
     },
     onError: () => {
       toast({
