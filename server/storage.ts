@@ -157,9 +157,20 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Player profile not found");
     }
 
+    // Handle array fields separately to avoid JSON parsing issues
+    const updateData: any = { ...updates, updatedAt: new Date() };
+    
+    // Convert arrays to proper format for PostgreSQL
+    if (updates.unlockedSkins) {
+      updateData.unlockedSkins = updates.unlockedSkins;
+    }
+    if (updates.achievements) {
+      updateData.achievements = updates.achievements;
+    }
+
     const [updatedProfile] = await db
       .update(playerProfile)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(playerProfile.id, profile.id))
       .returning();
     return updatedProfile;

@@ -70,19 +70,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newSkin = skinChanged ? newSkins[newSkins.length - 1] : profile.currentSkin;
 
         // Check for new achievements
-        const oldAchievements = profile.achievements;
-        const newAchievements = checkAchievements(newTotalClicks, record.clicks, profile.streakCount);
+        const oldAchievements = profile.achievements || [];
+        const currentHour = new Date().getHours();
+        const isEarlyMorning = currentHour >= 5 && currentHour < 9;
+        const isLateNight = currentHour >= 22 || currentHour < 5;
+        const newAchievements = checkAchievements(
+          newTotalClicks, 
+          profile.streakCount, 
+          record.clicks,
+          oldAchievements,
+          isEarlyMorning,
+          isLateNight,
+          0 // dailyChallengesCompleted - placeholder for now
+        );
         const achievementUnlocked = newAchievements.length > oldAchievements.length;
         const unlockedAchievementNames = newAchievements.filter(a => !oldAchievements.includes(a));
 
+        // Update only the basic fields to avoid JSON parsing issues
         profile = await storage.updatePlayerProfile({
-          ...profile,
           totalClicks: newTotalClicks,
           currentLevel: newLevel,
-          currentSkin: newSkin,
-          unlockedSkins: newSkins,
-          achievements: newAchievements
+          currentSkin: newSkin
         });
+
+        // Update arrays separately using raw SQL to avoid JSON parsing issues
+        if (newSkins.length !== oldSkins.length || newAchievements.length !== oldAchievements.length) {
+          await db.execute(`
+            UPDATE player_profile 
+            SET unlocked_skins = $1, achievements = $2, updated_at = NOW()
+            WHERE id = $3
+          `, [newSkins, newAchievements, profile.id]);
+          
+          // Refresh profile data
+          profile = await storage.getPlayerProfile() || profile;
+        }
 
         // Return level up and achievement info
         res.json({
