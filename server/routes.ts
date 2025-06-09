@@ -297,10 +297,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       // Achievements based on goal progression
+      let goalAchievements: string[] = [];
+      if (activeGoal) {
+        // Calculate goal-specific achievements
+        const goalRecords = await storage.getGoalClickRecords(
+          activeGoal.id, 
+          "2020-01-01", 
+          new Date().toISOString().split('T')[0]
+        );
+        const todayRecord = await storage.getGoalClickRecord(
+          activeGoal.id, 
+          new Date().toISOString().split('T')[0]
+        );
+        const todayClicks = todayRecord?.clicks || 0;
+        
+        // Calculate streak (simplified for now)
+        const streakCount = goalRecords.filter(r => (r.clicks || 0) > 0).length;
+        
+        goalAchievements = checkAchievements(
+          goalClicks, // Use goal totalClicks
+          streakCount,
+          todayClicks,
+          [], // Start fresh for each goal
+          false, // isEarlyMorning
+          false, // isLateNight
+          0 // dailyChallengesCompleted
+        );
+      }
+
       const achievements = Object.entries(ACHIEVEMENTS).map(([id, achievement]) => ({
         id,
         ...achievement,
-        unlocked: profile.achievements.includes(id)
+        unlocked: goalAchievements.includes(id)
       }));
 
       res.json({
