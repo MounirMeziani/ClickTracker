@@ -390,7 +390,7 @@ export default function Home() {
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       {/* Navigation */}
       <nav className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold text-text-primary">Job Application Tracker</h1>
+        <h1 className="text-xl font-bold text-text-primary">Task Tracker</h1>
         <div className="flex gap-2">
           <Link href="/goals">
             <Button variant="outline" className="flex items-center gap-2">
