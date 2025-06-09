@@ -123,26 +123,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get weekly summary
+  // Get weekly summary (goal-specific when active goal exists)
   app.get("/api/clicks/weekly", async (req, res) => {
     try {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - 6);
       
-      const records = await storage.getClickRecordsInRange(
-        startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
-      );
+      const activeGoal = await storage.getActiveGoal(1); // hardcoded userId = 1
       
-      const totalClicks = records.reduce((sum, record) => sum + record.clicks, 0);
-      const daysWithClicks = records.filter(record => record.clicks > 0).length;
-      
-      res.json({
-        totalClicks,
-        averageClicks: Math.round((totalClicks / 7) * 10) / 10,
-        daysWithClicks
-      });
+      if (activeGoal) {
+        // Use goal-specific stats
+        const goalRecords = await storage.getGoalClickRecords(
+          activeGoal.id,
+          startDate.toISOString().split('T')[0],
+          endDate.toISOString().split('T')[0]
+        );
+        
+        const totalClicks = goalRecords.reduce((sum, record) => sum + record.clicks, 0);
+        const daysWithClicks = goalRecords.filter(record => record.clicks > 0).length;
+        
+        res.json({
+          totalClicks,
+          averageClicks: Math.round((totalClicks / 7) * 10) / 10,
+          daysWithClicks
+        });
+      } else {
+        // No active goal, use global stats
+        const records = await storage.getClickRecordsInRange(
+          startDate.toISOString().split('T')[0],
+          endDate.toISOString().split('T')[0]
+        );
+        
+        const totalClicks = records.reduce((sum, record) => sum + record.clicks, 0);
+        const daysWithClicks = records.filter(record => record.clicks > 0).length;
+        
+        res.json({
+          totalClicks,
+          averageClicks: Math.round((totalClicks / 7) * 10) / 10,
+          daysWithClicks
+        });
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to get weekly summary" });
     }
@@ -175,20 +196,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all-time summary
+  // Get all-time summary (goal-specific when active goal exists)
   app.get("/api/clicks/all-time", async (req, res) => {
     try {
-      const records = await storage.getAllClickRecords();
-      const totalClicks = records.reduce((sum, record) => sum + record.clicks, 0);
-      const daysActive = records.filter(record => record.clicks > 0).length;
-      const bestDay = Math.max(...records.map(record => record.clicks), 0);
+      const activeGoal = await storage.getActiveGoal(1); // hardcoded userId = 1
       
-      res.json({
-        totalClicks,
-        daysActive,
-        bestDay,
-        averageClicks: daysActive > 0 ? Math.round((totalClicks / daysActive) * 10) / 10 : 0
-      });
+      if (activeGoal) {
+        // Use goal-specific stats
+        const goalRecords = await storage.getGoalClickRecords(
+          activeGoal.id, 
+          "2020-01-01", // Start from far past
+          new Date().toISOString().split('T')[0] // Until today
+        );
+        
+        const totalClicks = activeGoal.totalClicks;
+        const daysActive = goalRecords.filter(record => record.clicks > 0).length;
+        const bestDay = goalRecords.length > 0 ? Math.max(...goalRecords.map(record => record.clicks), 0) : 0;
+        
+        res.json({
+          totalClicks,
+          daysActive,
+          bestDay,
+          averageClicks: daysActive > 0 ? Math.round((totalClicks / daysActive) * 10) / 10 : 0
+        });
+      } else {
+        // No active goal, use global stats
+        const records = await storage.getAllClickRecords();
+        const totalClicks = records.reduce((sum, record) => sum + record.clicks, 0);
+        const daysActive = records.filter(record => record.clicks > 0).length;
+        const bestDay = Math.max(...records.map(record => record.clicks), 0);
+        
+        res.json({
+          totalClicks,
+          daysActive,
+          bestDay,
+          averageClicks: daysActive > 0 ? Math.round((totalClicks / daysActive) * 10) / 10 : 0
+        });
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to get all-time summary" });
     }
