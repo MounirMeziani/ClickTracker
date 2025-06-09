@@ -127,7 +127,7 @@ export default function Onboarding() {
           Welcome to Your Productivity Court
         </h1>
         <p className="text-lg text-muted-foreground">
-          Transform your daily tasks into an engaging basketball career journey
+          Gamify your daily tasks into an engaging basketball career journey
         </p>
       </div>
 
