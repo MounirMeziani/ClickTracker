@@ -519,6 +519,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Team deletion endpoint
+  app.delete("/api/teams/:teamId", async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const userId = 1; // Using hardcoded user ID for now
+      
+      console.log("Deleting team:", teamId, "by user:", userId);
+      
+      // Check if user is team owner
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      if (team.ownerId !== userId) {
+        return res.status(403).json({ message: "Only team owner can delete the team" });
+      }
+      
+      await storage.deleteTeam(teamId);
+      
+      res.json({ 
+        success: true,
+        message: "Team deleted successfully" 
+      });
+    } catch (error) {
+      console.error("Team deletion error:", error);
+      res.status(500).json({ message: "Failed to delete team" });
+    }
+  });
+
   app.get("/api/team/feed", async (req, res) => {
     try {
       const motivationalMessage = generateMotivationalMessage();

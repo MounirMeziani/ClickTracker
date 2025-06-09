@@ -77,6 +77,7 @@ export interface IStorage {
   getTeamMembers(teamId: number): Promise<Array<{member: TeamMember, user: User, profile: PlayerProfile}>>;
   addTeamMember(member: InsertTeamMember): Promise<TeamMember>;
   removeTeamMember(teamId: number, userId: number): Promise<void>;
+  deleteTeam(teamId: number): Promise<void>;
   
   // Team invites
   createTeamInvite(invite: InsertTeamInvite): Promise<TeamInvite>;
@@ -360,6 +361,18 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(teamInvites)
       .where(eq(teamInvites.teamId, teamId))
       .orderBy(desc(teamInvites.createdAt));
+  }
+
+  async deleteTeam(teamId: number): Promise<void> {
+    // Delete in the correct order to respect foreign key constraints
+    // First delete team invites
+    await db.delete(teamInvites).where(eq(teamInvites.teamId, teamId));
+    
+    // Then delete team members
+    await db.delete(teamMembers).where(eq(teamMembers.teamId, teamId));
+    
+    // Finally delete the team itself
+    await db.delete(teams).where(eq(teams.id, teamId));
   }
 
   // Team progress tracking

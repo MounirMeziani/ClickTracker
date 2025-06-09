@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Copy, Users, Plus, Share2, Check, Home, Target, Activity } from "lucide-react";
+import { Copy, Users, Plus, Share2, Check, Home, Target, Activity, Trash2, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -113,6 +113,26 @@ export default function Teams() {
       toast({
         title: "Error",
         description: "Failed to create invite",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: async (teamId: number) => {
+      return await apiRequest("DELETE", `/api/teams/${teamId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams/user/1"] });
+      toast({
+        title: "Team Deleted",
+        description: "Team and all its data have been permanently deleted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete team",
         variant: "destructive",
       });
     },
