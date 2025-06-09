@@ -62,10 +62,7 @@ export default function Onboarding() {
 
   const createGoal = useMutation({
     mutationFn: async (goalData: z.infer<typeof goalSchema>) => {
-      return await apiRequest("/api/goals", {
-        method: "POST",
-        body: JSON.stringify(goalData),
-      });
+      return await apiRequest("POST", "/api/goals", goalData);
     },
     onSuccess: () => {
       toast({
