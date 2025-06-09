@@ -1,3 +1,26 @@
+/**
+ * MAIN APPLICATION COMPONENT
+ * 
+ * This is the root component that sets up routing and global providers.
+ * 
+ * DEPENDENCIES:
+ * - wouter: Lightweight client-side routing
+ * - @tanstack/react-query: Server state management and caching
+ * - shadcn/ui: UI component library with Toaster for notifications
+ * 
+ * ARCHITECTURE NOTES:
+ * - QueryClient handles all API requests and caching
+ * - Router manages navigation between different app pages
+ * - Toaster provides global notification system
+ * 
+ * ROUTING STRUCTURE:
+ * - / : Home page (main productivity interface)
+ * - /social : Social features and leaderboards
+ * - /teams : Team management and collaboration
+ * - /goals : Goal management interface
+ * - /join/:code : Team invitation acceptance
+ * - /onboarding : First-time user setup
+ */
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";

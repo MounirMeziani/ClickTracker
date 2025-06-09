@@ -1,4 +1,28 @@
 // Basketball career progression system
+/**
+ * BASKETBALL GAMIFICATION SYSTEM
+ * 
+ * This module defines the basketball-themed progression system that gamifies
+ * productivity tracking through familiar sports metaphors and achievements.
+ * 
+ * KEY CONCEPTS:
+ * - Career progression from Rookie to Hall of Famer (12 levels)
+ * - Uniform unlocks (skins) tied to level progression
+ * - Achievement system for milestones and streaks
+ * - Dynamic daily challenges based on user level
+ * 
+ * DESIGN PHILOSOPHY:
+ * - Progressive difficulty scaling to maintain engagement
+ * - Basketball terminology for relatability and fun
+ * - Multiple reward types (levels, skins, achievements)
+ * - Adaptive challenges that grow with user capability
+ */
+
+/**
+ * CAREER LEVEL PROGRESSION SYSTEM
+ * Defines the 12-level basketball career progression with exponential difficulty scaling.
+ * Each level represents a milestone in the user's productivity journey.
+ */
 export const CAREER_LEVELS = {
   1: { name: "Job Application Level", title: "Playground Beginner", clicksRequired: 0, description: "Just starting your job search journey" },
   2: { name: "Job Application Level", title: "Junior Varsity Applicant", clicksRequired: 50, description: "Building your application skills" },
