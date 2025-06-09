@@ -57,8 +57,10 @@ function Router() {
     );
   }
 
-  // If user has no goals, show onboarding
-  const needsOnboarding = !goals || (Array.isArray(goals) && goals.length === 0);
+  // Check if user needs onboarding: no goals OR no active goal
+  const needsOnboarding = !goals || 
+    (Array.isArray(goals) && goals.length === 0) ||
+    (Array.isArray(goals) && goals.length > 0 && !goals.some(goal => goal.isActive));
 
   return (
     <Switch>

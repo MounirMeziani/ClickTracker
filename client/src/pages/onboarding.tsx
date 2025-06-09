@@ -62,7 +62,11 @@ export default function Onboarding() {
 
   const createGoal = useMutation({
     mutationFn: async (goalData: z.infer<typeof goalSchema>) => {
-      return await apiRequest("POST", "/api/goals", goalData);
+      const response = await apiRequest("POST", "/api/goals", goalData);
+      const result = await response.json();
+      // Immediately set the goal as active
+      await apiRequest("POST", `/api/goals/${result.id}/activate`, {});
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -70,6 +74,7 @@ export default function Onboarding() {
         description: "Your first goal is ready. Time to start your productivity journey!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals/active"] });
       setStep(4); // Move to completion step
     },
     onError: (error) => {
@@ -90,7 +95,8 @@ export default function Onboarding() {
     form.setValue("name", suggestion.name);
     form.setValue("description", suggestion.description);
     form.setValue("category", suggestion.category);
-    setStep(3);
+    // Auto-submit the suggested goal
+    createGoal.mutate(suggestion);
   };
 
   const nextStep = () => {
