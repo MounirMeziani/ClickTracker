@@ -1,18 +1,49 @@
+/**
+ * DATABASE SCHEMA DEFINITIONS
+ * 
+ * This file defines the complete database schema using Drizzle ORM for PostgreSQL.
+ * All tables, relationships, and type definitions are centralized here.
+ * 
+ * DEPENDENCIES:
+ * - drizzle-orm: ORM for type-safe database operations
+ * - drizzle-zod: Schema validation integration with Zod
+ * - zod: Runtime type validation
+ * 
+ * ARCHITECTURE NOTE:
+ * This schema supports a basketball-themed productivity app with:
+ * - User management and authentication
+ * - Click tracking (daily productivity metrics)
+ * - Gamification (levels, skins, achievements)
+ * - Goal system with independent tracking per goal
+ * - Team collaboration features
+ * - Daily challenges system
+ */
 import { pgTable, serial, text, varchar, integer, timestamp, date, boolean, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+/**
+ * USERS TABLE
+ * Core user authentication and identification
+ * Used for login/registration (currently simplified, no real auth system)
+ */
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: varchar("username").unique().notNull(),
-  password: text("password").notNull(),
+  password: text("password").notNull(), // NOTE: In production, this should be hashed
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+/**
+ * CLICK RECORDS TABLE
+ * Tracks overall daily click activity across all goals
+ * Used for general statistics and the main home page analytics
+ * NOTE: This is separate from goal-specific click tracking
+ */
 export const clickRecords = pgTable("click_records", {
   id: serial("id").primaryKey(),
-  date: date("date").notNull().unique(),
+  date: date("date").notNull().unique(), // One record per day
   clicks: integer("clicks").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -83,18 +114,30 @@ export const teamInvites = pgTable("team_invites", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Clean goals system - each goal is independent
+/**
+ * GOALS TABLE - Core Feature
+ * Represents individual productivity goals that users can create and track
+ * 
+ * IMPORTANT: Goals work like "swappable CDs" - only one can be active at a time
+ * Each goal has independent click tracking and progression
+ * 
+ * FEATURES:
+ * - Users can create multiple goals with custom names/descriptions
+ * - Only one goal can be active (receiving clicks) at any time
+ * - Each goal tracks its own level progression and statistics
+ * - Goals can be edited, deleted, and swapped between
+ */
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
-  playerId: integer("player_id").notNull(), // Each goal belongs to a player
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  category: varchar("category", { length: 100 }).default("general"),
-  isActive: boolean("is_active").default(false), // Only one active goal per player
-  totalClicks: integer("total_clicks").default(0),
-  currentLevel: integer("current_level").default(1),
-  levelPoints: integer("level_points").default(0),
-  weeklyTarget: integer("weekly_target").default(100),
+  playerId: integer("player_id").notNull(), // References users.id
+  name: varchar("name", { length: 255 }).notNull(), // User-customizable goal name
+  description: text("description"), // User-customizable description
+  category: varchar("category", { length: 100 }).default("general"), // Categories like "productivity", "learning"
+  isActive: boolean("is_active").default(false), // Only one goal can be active per user
+  totalClicks: integer("total_clicks").default(0), // Cumulative clicks for this goal
+  currentLevel: integer("current_level").default(1), // Goal-specific level progression
+  levelPoints: integer("level_points").default(0), // Points toward next level
+  weeklyTarget: integer("weekly_target").default(100), // Target clicks per week
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
