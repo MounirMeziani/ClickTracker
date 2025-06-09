@@ -53,6 +53,7 @@ export default function Onboarding() {
 
   const form = useForm<z.infer<typeof goalSchema>>({
     resolver: zodResolver(goalSchema),
+    mode: "onSubmit", // Only validate on submit to prevent re-renders
     defaultValues: {
       name: "",
       description: "",
@@ -347,7 +348,8 @@ export default function Onboarding() {
                       <Textarea 
                         placeholder="Describe what you want to track and achieve..."
                         {...field}
-                        className="bg-white"
+                        className="bg-white resize-none"
+                        rows={3}
                       />
                     </FormControl>
                     <FormMessage />

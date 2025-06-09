@@ -237,15 +237,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const levelData = CAREER_LEVELS[profile.currentLevel];
-      const nextLevelData = CAREER_LEVELS[profile.currentLevel + 1] || null;
+      // Get active goal to determine unlocks based on goal progression
+      const activeGoal = await storage.getActiveGoal(1); // hardcoded userId = 1
+      const goalLevel = activeGoal ? activeGoal.currentLevel : 1;
+      const goalClicks = activeGoal ? activeGoal.totalClicks : 0;
+
+      const levelData = CAREER_LEVELS[goalLevel];
+      const nextLevelData = CAREER_LEVELS[goalLevel + 1] || null;
       
+      // Uniforms unlock based on goal level, not global level
       const availableSkins = Object.entries(SKINS).map(([id, skin]) => ({
         id,
         ...skin,
-        unlocked: profile.unlockedSkins.includes(id)
+        unlocked: skin.unlockLevel <= goalLevel
       }));
 
+      // Achievements based on goal progression
       const achievements = Object.entries(ACHIEVEMENTS).map(([id, achievement]) => ({
         id,
         ...achievement,
@@ -253,11 +260,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       res.json({
-        profile,
+        profile: {
+          ...profile,
+          currentLevel: goalLevel, // Use goal level instead of global level
+          totalClicks: goalClicks, // Use goal clicks instead of global clicks
+        },
         levelData,
         nextLevelData,
         availableSkins,
-        achievements
+        achievements,
+        activeGoal
       });
     } catch (error) {
       console.error("Profile error:", error);
