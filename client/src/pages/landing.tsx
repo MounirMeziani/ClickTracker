@@ -6,38 +6,38 @@ import { Target, Trophy, Users, TrendingUp, Star, Zap, Award, Crown, MousePointe
 const FEATURES = [
   {
     icon: Target,
-    title: "No-BS Goal Setting",
-    description: "Forget fluffy goal-setting advice. This system forces you to define exactly what winning looks like and tracks every move toward it.",
+    title: "No BS Goal Setting",
+    description: "Define exactly what winning looks like. Track every move toward it.",
     color: "bg-orange-500"
   },
   {
     icon: Trophy,
     title: "Championship Mindset",
-    description: "Elite athletes don't rely on feelings—they rely on systems. Your progress becomes as addictive as your favorite game.",
+    description: "Elite athletes rely on systems, not feelings. Your progress becomes addictive.",
     color: "bg-blue-500"
   },
   {
     icon: TrendingUp,
     title: "Raw Data That Matters",
-    description: "No sugar-coating. See exactly where you're winning, where you're failing, and what needs to change—immediately.",
+    description: "See exactly where you're winning, where you're failing, what needs to change.",
     color: "bg-green-500"
   },
   {
     icon: Users,
     title: "Accountability That Bites",
-    description: "Your team sees your progress. No hiding, no excuses. When everyone's watching, mediocrity becomes impossible.",
+    description: "Your team sees your progress. When everyone's watching, mediocrity becomes impossible.",
     color: "bg-purple-500"
   },
   {
     icon: Star,
     title: "Earn Your Stripes",
-    description: "Every achievement is earned through sweat, not participation trophies. Your badges represent real accomplishment.",
+    description: "Every achievement earned through sweat. Your badges represent real accomplishment.",
     color: "bg-yellow-500"
   },
   {
     icon: Zap,
     title: "Daily Domination",
-    description: "Champions are made in the daily grind. These challenges separate the committed from the comfortable.",
+    description: "Champions are made in the daily grind. Separate the committed from the comfortable.",
     color: "bg-pink-500"
   }
 ];
@@ -75,9 +75,8 @@ export default function Landing() {
           </h2>
           
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Listen, champions don't wait for motivation—they create systems that make success inevitable. 
-            This isn't another productivity app. This is your personal training ground where every click 
-            builds the habit that separates winners from wannabes.
+            Champions create systems that make success inevitable. This is your training ground where 
+            every click builds the habit that separates winners from wannabes.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -119,8 +118,8 @@ export default function Landing() {
               This Isn't For Everyone
             </h3>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              If you're looking for another feel-good app that tells you what you want to hear, keep scrolling. 
-              This is for people who are tired of their own excuses and ready to build something real.
+              If you want another feel good app, keep scrolling. This is for people tired of excuses 
+              and ready to build something real.
             </p>
           </div>
           
@@ -152,7 +151,7 @@ export default function Landing() {
               The System That Separates Winners From Losers
             </h3>
             <p className="text-xl text-gray-600">
-              Three steps. No fluff. Real results or you're doing it wrong.
+              Three steps. No fluff. Real results.
             </p>
           </div>
           
@@ -163,7 +162,7 @@ export default function Landing() {
               </div>
               <h4 className="text-xl font-semibold text-gray-800 mb-4">Define Your Victory</h4>
               <p className="text-gray-600">
-                Stop being vague. Pick exactly what winning looks like—no room for interpretation or excuses.
+                Stop being vague. Pick exactly what winning looks like.
               </p>
             </div>
             
@@ -173,7 +172,7 @@ export default function Landing() {
               </div>
               <h4 className="text-xl font-semibold text-gray-800 mb-4">Execute Relentlessly</h4>
               <p className="text-gray-600">
-                Every click is a rep. Every rep builds the machine. Watch your progress compound daily—no shortcuts, no participation trophies.
+                Every click is a rep. Every rep builds the machine. Watch your progress compound daily.
               </p>
             </div>
             
@@ -183,7 +182,7 @@ export default function Landing() {
               </div>
               <h4 className="text-xl font-semibold text-gray-800 mb-4">Dominate Your Field</h4>
               <p className="text-gray-600">
-                Earn achievements through blood, sweat, and consistency. Unlock rewards that mean something—because you actually earned them.
+                Earn achievements through blood, sweat, and consistency. Unlock rewards that mean something because you actually earned them.
               </p>
             </div>
           </div>
