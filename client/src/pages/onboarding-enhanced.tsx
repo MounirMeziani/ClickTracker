@@ -131,9 +131,12 @@ export default function OnboardingEnhanced() {
 
   const handleSuggestionSelect = (suggestion: typeof SUGGESTED_GOALS[0]) => {
     setSelectedSuggestion(suggestion);
+    form.setValue("name", suggestion.name);
+    form.setValue("description", suggestion.description);
+    form.setValue("category", suggestion.category);
     setAnimationClass("animate-pulse");
     setTimeout(() => {
-      createGoal.mutate(suggestion);
+      nextStep();
     }, 500);
   };
 
