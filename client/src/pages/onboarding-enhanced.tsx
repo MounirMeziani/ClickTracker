@@ -56,6 +56,7 @@ export default function OnboardingEnhanced() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<typeof SUGGESTED_GOALS[0] | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [animationClass, setAnimationClass] = useState("");
+  const [isCompletingOnboarding, setIsCompletingOnboarding] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -102,6 +103,27 @@ export default function OnboardingEnhanced() {
       });
     },
   });
+
+  const completeOnboarding = async () => {
+    setIsCompletingOnboarding(true);
+    try {
+      await apiRequest("POST", "/api/auth/complete-onboarding", {});
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Welcome aboard!",
+        description: "Your productivity journey starts now.",
+      });
+      setLocation("/");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCompletingOnboarding(false);
+    }
+  };
 
   const onSubmit = (values: z.infer<typeof goalSchema>) => {
     createGoal.mutate(values);
@@ -436,11 +458,12 @@ export default function OnboardingEnhanced() {
               
               <div className="text-center pt-4">
                 <Button 
-                  onClick={() => setLocation("/")} 
+                  onClick={completeOnboarding} 
                   size="lg" 
                   className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white px-8 py-4 text-lg"
+                  disabled={isCompletingOnboarding}
                 >
-                  Start My Productivity Journey 🚀
+                  {isCompletingOnboarding ? "Setting up..." : "Start My Productivity Journey 🚀"}
                 </Button>
                 <p className="text-sm text-gray-500 mt-3">
                   Ready to make today count? Your first click is just a tap away.
