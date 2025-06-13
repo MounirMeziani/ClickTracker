@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerGoalRoutes(app);
 
   // Get today's click count
-  app.get("/api/clicks/today", async (req, res) => {
+  app.get("/api/clicks/today", isAuthenticated, async (req, res) => {
     try {
       const today = new Date().toISOString().split('T')[0];
       const record = await storage.getClickRecordByDate(today);
@@ -285,12 +285,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get player profile and game data
-  app.get("/api/player/profile", async (req, res) => {
+  app.get("/api/player/profile", isAuthenticated, async (req: any, res) => {
     try {
-      let profile = await storage.getPlayerProfile();
+      const userId = req.user.claims.sub;
+      let profile = await storage.getPlayerProfile(userId);
       
       if (!profile) {
         profile = await storage.createPlayerProfile({
+          userId,
           currentLevel: 1,
           totalClicks: 0,
           currentSkin: "rookie"
@@ -298,7 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get active goal to determine unlocks based on goal progression
-      const activeGoal = await storage.getActiveGoal(1); // hardcoded userId = 1
+      const activeGoal = await storage.getActiveGoal(userId);
       const goalLevel = activeGoal ? activeGoal.currentLevel : 1;
       const goalClicks = activeGoal ? activeGoal.totalClicks : 0;
 

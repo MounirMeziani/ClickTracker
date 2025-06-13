@@ -85,8 +85,8 @@ function Router() {
     );
   }
 
-  // Check if user needs onboarding: no goals OR no active goal
-  const needsOnboarding = !goals || 
+  // Check if user needs onboarding: no profile OR no goals OR no active goal
+  const needsOnboarding = !profile || !goals || 
     (Array.isArray(goals) && goals.length === 0) ||
     (Array.isArray(goals) && goals.length > 0 && !goals.some(goal => goal.isActive));
 

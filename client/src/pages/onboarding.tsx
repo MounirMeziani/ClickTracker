@@ -44,11 +44,13 @@ const SUGGESTED_GOALS = [
 export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [selectedSuggestion, setSelectedSuggestion] = useState<typeof SUGGESTED_GOALS[0] | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [userName, setUserName] = useState("");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
-  const totalSteps = 4;
+  const totalSteps = 5;
   const progressPercentage = ((step - 1) / (totalSteps - 1)) * 100;
 
   const form = useForm<z.infer<typeof goalSchema>>({
@@ -70,13 +72,16 @@ export default function Onboarding() {
       return result;
     },
     onSuccess: () => {
+      setShowConfetti(true);
       toast({
-        title: "Goal Created!",
-        description: "Your first goal is ready. Time to start your productivity journey!",
+        title: "🎉 Goal Created!",
+        description: "Your productivity journey begins now!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals/active"] });
-      setStep(4); // Move to completion step
+      setTimeout(() => {
+        setStep(5); // Move to completion step
+      }, 1000);
     },
     onError: (error) => {
       toast({
