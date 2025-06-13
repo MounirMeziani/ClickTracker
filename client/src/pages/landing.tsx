@@ -6,47 +6,47 @@ import { Target, Trophy, Users, TrendingUp, Star, Zap, Award, Crown, MousePointe
 const FEATURES = [
   {
     icon: Target,
-    title: "Smart Goal Setting",
-    description: "Set SMART goals that adapt to your performance and keep you motivated",
+    title: "No-BS Goal Setting",
+    description: "Forget fluffy goal-setting advice. This system forces you to define exactly what winning looks like and tracks every move toward it.",
     color: "bg-orange-500"
   },
   {
     icon: Trophy,
-    title: "Basketball Gamification",
-    description: "Level up like a pro athlete with achievements and basketball-themed rewards",
+    title: "Championship Mindset",
+    description: "Elite athletes don't rely on feelings—they rely on systems. Your progress becomes as addictive as your favorite game.",
     color: "bg-blue-500"
   },
   {
     icon: TrendingUp,
-    title: "Visual Progress Tracking",
-    description: "See your improvement with detailed charts, streaks, and performance analytics",
+    title: "Raw Data That Matters",
+    description: "No sugar-coating. See exactly where you're winning, where you're failing, and what needs to change—immediately.",
     color: "bg-green-500"
   },
   {
     icon: Users,
-    title: "Team Collaboration",
-    description: "Join teams, compete with friends, and stay motivated together",
+    title: "Accountability That Bites",
+    description: "Your team sees your progress. No hiding, no excuses. When everyone's watching, mediocrity becomes impossible.",
     color: "bg-purple-500"
   },
   {
     icon: Star,
-    title: "Achievement System",
-    description: "Unlock badges, earn rewards, and celebrate every milestone",
+    title: "Earn Your Stripes",
+    description: "Every achievement is earned through sweat, not participation trophies. Your badges represent real accomplishment.",
     color: "bg-yellow-500"
   },
   {
     icon: Zap,
-    title: "Daily Challenges",
-    description: "Complete daily challenges to build consistency and earn bonus points",
+    title: "Daily Domination",
+    description: "Champions are made in the daily grind. These challenges separate the committed from the comfortable.",
     color: "bg-pink-500"
   }
 ];
 
 const STATS = [
-  { number: "10,000+", label: "Goals Achieved" },
-  { number: "5,000+", label: "Active Users" },
-  { number: "98%", label: "Success Rate" },
-  { number: "24/7", label: "Progress Tracking" }
+  { number: "10,000+", label: "Dreams Crushed" },
+  { number: "5,000+", label: "Champions Created" },
+  { number: "98%", label: "Winners Who Stay" },
+  { number: "24/7", label: "Relentless Tracking" }
 ];
 
 export default function Landing() {
@@ -71,12 +71,13 @@ export default function Landing() {
           </div>
           
           <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-6">
-            Turn Your Goals Into Game-Winning Shots
+            Stop Making Excuses. Start Making Progress.
           </h2>
           
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Experience the power of basketball-inspired productivity. Track your progress, level up your skills, 
-            and achieve your goals with the motivation of a championship team.
+            Listen, champions don't wait for motivation—they create systems that make success inevitable. 
+            This isn't another productivity app. This is your personal training ground where every click 
+            builds the habit that separates winners from wannabes.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -85,7 +86,7 @@ export default function Landing() {
               className="bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 text-white px-8 py-4 text-lg"
               onClick={() => window.location.href = '/api/login'}
             >
-              Start Your Journey
+              Join The Elite
               <Crown className="w-5 h-5 ml-2" />
             </Button>
             <Button 
@@ -93,7 +94,7 @@ export default function Landing() {
               size="lg" 
               className="border-2 border-orange-300 text-orange-600 hover:bg-orange-50 px-8 py-4 text-lg"
             >
-              Watch Demo
+              See It In Action
               <MousePointer className="w-5 h-5 ml-2" />
             </Button>
           </div>
@@ -115,10 +116,11 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h3 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-              Why Choose Focus?
+              This Isn't For Everyone
             </h3>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              We combine proven productivity methods with engaging game mechanics to help you stay motivated and achieve more.
+              If you're looking for another feel-good app that tells you what you want to hear, keep scrolling. 
+              This is for people who are tired of their own excuses and ready to build something real.
             </p>
           </div>
           
@@ -147,10 +149,10 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h3 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-              How It Works
+              The System That Separates Winners From Losers
             </h3>
             <p className="text-xl text-gray-600">
-              Get started in minutes and see results immediately
+              Three steps. No fluff. Real results or you're doing it wrong.
             </p>
           </div>
           
@@ -159,9 +161,9 @@ export default function Landing() {
               <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">1</span>
               </div>
-              <h4 className="text-xl font-semibold text-gray-800 mb-4">Set Your Goal</h4>
+              <h4 className="text-xl font-semibold text-gray-800 mb-4">Define Your Victory</h4>
               <p className="text-gray-600">
-                Choose from our quick-start templates or create a custom goal that fits your unique needs and aspirations.
+                Stop being vague. Pick exactly what winning looks like—no room for interpretation or excuses.
               </p>
             </div>
             
@@ -169,9 +171,9 @@ export default function Landing() {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">2</span>
               </div>
-              <h4 className="text-xl font-semibold text-gray-800 mb-4">Track Progress</h4>
+              <h4 className="text-xl font-semibold text-gray-800 mb-4">Execute Relentlessly</h4>
               <p className="text-gray-600">
-                Click to log your activities, watch your level increase, and see your progress visualized in real-time.
+                Every click is a rep. Every rep builds the machine. Watch your progress compound daily—no shortcuts, no participation trophies.
               </p>
             </div>
             
@@ -179,9 +181,9 @@ export default function Landing() {
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl font-bold text-white">3</span>
               </div>
-              <h4 className="text-xl font-semibold text-gray-800 mb-4">Level Up</h4>
+              <h4 className="text-xl font-semibold text-gray-800 mb-4">Dominate Your Field</h4>
               <p className="text-gray-600">
-                Earn achievements, unlock new basketball uniforms, and celebrate your wins as you build lasting habits.
+                Earn achievements through blood, sweat, and consistency. Unlock rewards that mean something—because you actually earned them.
               </p>
             </div>
           </div>
