@@ -1,196 +1,231 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, Users, Trophy, TrendingUp, Zap, Shield } from "lucide-react";
+import { Target, Trophy, Users, TrendingUp, Star, Zap, Award, Crown, MousePointer, Calendar, BarChart3 } from "lucide-react";
+
+const FEATURES = [
+  {
+    icon: Target,
+    title: "Smart Goal Setting",
+    description: "Set SMART goals that adapt to your performance and keep you motivated",
+    color: "bg-orange-500"
+  },
+  {
+    icon: Trophy,
+    title: "Basketball Gamification",
+    description: "Level up like a pro athlete with achievements and basketball-themed rewards",
+    color: "bg-blue-500"
+  },
+  {
+    icon: TrendingUp,
+    title: "Visual Progress Tracking",
+    description: "See your improvement with detailed charts, streaks, and performance analytics",
+    color: "bg-green-500"
+  },
+  {
+    icon: Users,
+    title: "Team Collaboration",
+    description: "Join teams, compete with friends, and stay motivated together",
+    color: "bg-purple-500"
+  },
+  {
+    icon: Star,
+    title: "Achievement System",
+    description: "Unlock badges, earn rewards, and celebrate every milestone",
+    color: "bg-yellow-500"
+  },
+  {
+    icon: Zap,
+    title: "Daily Challenges",
+    description: "Complete daily challenges to build consistency and earn bonus points",
+    color: "bg-pink-500"
+  }
+];
+
+const STATS = [
+  { number: "10,000+", label: "Goals Achieved" },
+  { number: "5,000+", label: "Active Users" },
+  { number: "98%", label: "Success Rate" },
+  { number: "24/7", label: "Progress Tracking" }
+];
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-purple-50">
-      {/* Header */}
-      <header className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
-              Focus
-            </span>
-          </div>
-          <Button 
-            onClick={() => window.location.href = '/api/login'}
-            className="bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 text-white"
-          >
-            Get Started
-          </Button>
-        </div>
-      </header>
-
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
-        <div className="max-w-4xl mx-auto">
-          <Badge variant="outline" className="mb-4 border-orange-200 text-orange-700 bg-orange-50">
-            Basketball-Inspired Productivity
-          </Badge>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-20 w-32 h-32 bg-orange-200 rounded-full opacity-20 animate-pulse"></div>
+          <div className="absolute top-40 right-32 w-24 h-24 bg-blue-200 rounded-full opacity-20 animate-pulse delay-1000"></div>
+          <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-purple-200 rounded-full opacity-20 animate-pulse delay-2000"></div>
+        </div>
+        
+        <div className="relative max-w-6xl mx-auto px-4 py-20 text-center">
+          <div className="flex items-center justify-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
+              <Target className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
+              Focus
+            </h1>
+          </div>
+          
+          <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-6">
             Turn Your Goals Into Game-Winning Shots
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Track your progress like a basketball pro. Set goals, build streaks, and level up your productivity with gamified tracking and team collaboration.
+          </h2>
+          
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Experience the power of basketball-inspired productivity. Track your progress, level up your skills, 
+            and achieve your goals with the motivation of a championship team.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button 
               size="lg" 
+              className="bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 text-white px-8 py-4 text-lg"
               onClick={() => window.location.href = '/api/login'}
-              className="bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 text-white px-8 py-3"
             >
               Start Your Journey
+              <Crown className="w-5 h-5 ml-2" />
             </Button>
             <Button 
-              size="lg" 
               variant="outline" 
-              className="border-2 border-blue-200 hover:bg-blue-50"
+              size="lg" 
+              className="border-2 border-orange-300 text-orange-600 hover:bg-orange-50 px-8 py-4 text-lg"
             >
-              Learn More
+              Watch Demo
+              <MousePointer className="w-5 h-5 ml-2" />
             </Button>
+          </div>
+          
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto">
+            {STATS.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-gray-800">{stat.number}</div>
+                <div className="text-sm text-gray-600">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4 text-gray-800">
-            Why Choose Focus?
-          </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Combining the excitement of basketball with proven productivity techniques to help you achieve your goals.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <Card className="border-2 border-orange-100 hover:border-orange-200 transition-colors">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">Goal Setting</h3>
-              <p className="text-gray-600">
-                Set SMART goals and track your progress with basketball-inspired levels and achievements.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-blue-100 hover:border-blue-200 transition-colors">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">Team Collaboration</h3>
-              <p className="text-gray-600">
-                Join teams, compete with friends, and stay motivated through social accountability.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-purple-100 hover:border-purple-200 transition-colors">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Trophy className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">Gamification</h3>
-              <p className="text-gray-600">
-                Earn points, unlock achievements, and level up as you consistently work towards your goals.
-              </p>
-            </CardContent>
-          </Card>
+      <section className="py-20 bg-white/50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+              Why Choose Focus?
+            </h3>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              We combine proven productivity methods with engaging game mechanics to help you stay motivated and achieve more.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {FEATURES.map((feature, index) => (
+              <Card key={index} className="border-2 border-gray-100 hover:border-orange-200 hover:shadow-lg transition-all duration-300">
+                <CardHeader>
+                  <div className={`w-12 h-12 ${feature.color} rounded-lg flex items-center justify-center mb-4`}>
+                    <feature.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-gray-800">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-gray-600">
+                    {feature.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="bg-white/60 backdrop-blur-sm py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-            <div>
-              <h2 className="text-3xl font-bold mb-6 text-gray-800">
-                Track Progress Like a Pro
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mt-1">
-                    <Zap className="w-3 h-3 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800">Daily Click Tracking</h4>
-                    <p className="text-gray-600">Track your focus sessions and build consistent habits</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mt-1">
-                    <TrendingUp className="w-3 h-3 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800">Progress Analytics</h4>
-                    <p className="text-gray-600">Visualize your improvement with detailed charts and stats</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mt-1">
-                    <Shield className="w-3 h-3 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800">Secure & Private</h4>
-                    <p className="text-gray-600">Your data is protected with enterprise-level security</p>
-                  </div>
-                </div>
+      {/* How It Works Section */}
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+              How It Works
+            </h3>
+            <p className="text-xl text-gray-600">
+              Get started in minutes and see results immediately
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">1</span>
               </div>
+              <h4 className="text-xl font-semibold text-gray-800 mb-4">Set Your Goal</h4>
+              <p className="text-gray-600">
+                Choose from our quick-start templates or create a custom goal that fits your unique needs and aspirations.
+              </p>
             </div>
-            <div className="bg-gradient-to-br from-orange-100 to-blue-100 rounded-2xl p-8 text-center">
-              <div className="text-4xl font-bold text-gray-800 mb-2">10,000+</div>
-              <p className="text-gray-600 mb-4">Goals achieved by our users</p>
-              <div className="text-4xl font-bold text-gray-800 mb-2">500+</div>
-              <p className="text-gray-600 mb-4">Active teams collaborating</p>
-              <div className="text-4xl font-bold text-gray-800 mb-2">95%</div>
-              <p className="text-gray-600">User satisfaction rate</p>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">2</span>
+              </div>
+              <h4 className="text-xl font-semibold text-gray-800 mb-4">Track Progress</h4>
+              <p className="text-gray-600">
+                Click to log your activities, watch your level increase, and see your progress visualized in real-time.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">3</span>
+              </div>
+              <h4 className="text-xl font-semibold text-gray-800 mb-4">Level Up</h4>
+              <p className="text-gray-600">
+                Earn achievements, unlock new basketball uniforms, and celebrate your wins as you build lasting habits.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-gray-800">
-            Ready to Level Up Your Productivity?
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Join thousands of users who have transformed their goal achievement with Focus.
+      <section className="py-20 bg-gradient-to-r from-orange-500 to-blue-600">
+        <div className="max-w-4xl mx-auto text-center px-4">
+          <h3 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            Ready to Transform Your Productivity?
+          </h3>
+          <p className="text-xl text-orange-100 mb-8">
+            Join thousands of users who are achieving their goals with basketball-inspired motivation.
           </p>
           <Button 
             size="lg" 
+            className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
             onClick={() => window.location.href = '/api/login'}
-            className="bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 text-white px-8 py-3"
           >
             Get Started Free
+            <Award className="w-5 h-5 ml-2" />
           </Button>
-          <p className="text-sm text-gray-500 mt-4">
-            No credit card required • Secure login with Replit
+          <p className="text-sm text-orange-200 mt-4">
+            No credit card required. Start achieving your goals in under 2 minutes.
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <Target className="w-4 h-4 text-white" />
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+              <Target className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg font-bold">Focus</span>
+            <span className="text-xl font-bold">Focus</span>
           </div>
-          <p className="text-gray-400">
-            Transform your goals into achievements with basketball-inspired productivity tracking.
+          <p className="text-gray-400 mb-4">
+            Turn your goals into game-winning shots.
           </p>
+          <div className="flex justify-center space-x-6 text-sm text-gray-400">
+            <span>© 2025 Focus. All rights reserved.</span>
+          </div>
         </div>
       </footer>
     </div>

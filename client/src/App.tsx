@@ -33,7 +33,7 @@ import Social from "@/pages/social";
 import Teams from "@/pages/teams";
 import Goals from "@/pages/goals";
 import JoinTeam from "@/pages/join-team";
-import Onboarding from "@/pages/onboarding";
+import Onboarding from "@/pages/onboarding-enhanced";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 

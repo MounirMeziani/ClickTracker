@@ -410,6 +410,13 @@ export default function Home() {
               Teams
             </Button>
           </Link>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/api/logout'}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            Logout
+          </Button>
         </div>
       </nav>
 
