@@ -30,10 +30,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      res.json(user);
+      
+      // Check if player profile exists and if onboarding is completed
+      let profile = await storage.getPlayerProfile(userId);
+      if (!profile) {
+        // Create profile for new user with onboarding incomplete
+        profile = await storage.createPlayerProfile({
+          userId: userId,
+          currentLevel: 1,
+          totalClicks: 0,
+          currentSkin: "rookie",
+          onboardingCompleted: false
+        });
+      }
+      
+      res.json({
+        ...user,
+        needsOnboarding: !profile.onboardingCompleted
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Complete onboarding endpoint
+  app.post('/api/auth/complete-onboarding', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.updatePlayerProfile(userId, {
+        onboardingCompleted: true
+      });
+      res.json({ success: true, profile });
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+      res.status(500).json({ message: "Failed to complete onboarding" });
     }
   });
 

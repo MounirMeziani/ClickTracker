@@ -72,6 +72,7 @@ export const playerProfile = pgTable("player_profile", {
   lastChallengeDate: date("last_challenge_date"),
   streakCount: integer("streak_count").notNull().default(0),
   teamId: integer("team_id"), // Reference to team
+  onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -184,10 +185,12 @@ export const updateClickRecordSchema = createInsertSchema(clickRecords).pick({
 });
 
 export const insertPlayerProfileSchema = createInsertSchema(playerProfile).pick({
+  userId: true,
   currentLevel: true,
   totalClicks: true,
   currentSkin: true,
   teamId: true,
+  onboardingCompleted: true,
 });
 
 export const insertDailyChallengeSchema = createInsertSchema(dailyChallenges).pick({

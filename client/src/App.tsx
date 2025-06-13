@@ -38,18 +38,7 @@ import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  // Check if user has any goals to determine if onboarding is needed
-  const { data: goals, isLoading: goalsLoading } = useQuery({
-    queryKey: ["/api/goals"],
-    enabled: isAuthenticated,
-  });
-
-  const { data: profile, isLoading: profileLoading } = useQuery({
-    queryKey: ["/api/player/profile"],
-    enabled: isAuthenticated,
-  });
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Show loading while checking authentication status
   if (isLoading) {
@@ -73,22 +62,8 @@ function Router() {
     );
   }
 
-  // Show loading while checking user status for authenticated users
-  if (goalsLoading || profileLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Setting up your experience...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if user needs onboarding: no profile OR no goals OR no active goal
-  const needsOnboarding = !profile || !goals || 
-    (Array.isArray(goals) && goals.length === 0) ||
-    (Array.isArray(goals) && goals.length > 0 && !goals.some(goal => goal.isActive));
+  // Check if user needs onboarding from the authentication response
+  const needsOnboarding = user?.needsOnboarding;
 
   return (
     <Switch>
