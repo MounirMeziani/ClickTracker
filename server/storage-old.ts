@@ -1,42 +1,40 @@
-import {
-  users,
-  clickRecords,
-  playerProfile,
+import { 
+  users, 
+  clickRecords, 
+  playerProfile, 
   dailyChallenges,
-  teams,
-  teamMembers,
-  teamActivity,
-  teamInvites,
   goals,
   goalClickRecords,
-  type User,
-  type UpsertUser,
-  type ClickRecord,
-  type InsertClickRecord,
+  teams,
+  teamMembers,
+  teamInvites,
+  type User, 
+  type InsertUser, 
+  type ClickRecord, 
+  type InsertClickRecord, 
+  type UpdateClickRecord,
   type PlayerProfile,
   type InsertPlayerProfile,
   type DailyChallenge,
   type InsertDailyChallenge,
-  type Team,
-  type InsertTeam,
-  type TeamMember,
-  type InsertTeamMember,
-  type TeamActivity,
-  type InsertTeamActivity,
   type Goal,
   type InsertGoal,
   type GoalClickRecord,
   type InsertGoalClickRecord,
+  type Team,
+  type InsertTeam,
+  type TeamMember,
+  type InsertTeamMember,
   type TeamInvite,
   type InsertTeamInvite,
 } from "@shared/schema";
-
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
 
-// Storage interface for the authentication system
+// Clean storage interface for the new goals system
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
@@ -47,24 +45,24 @@ export interface IStorage {
   getAllClickRecords(): Promise<ClickRecord[]>;
   getClickRecordsInRange(startDate: string, endDate: string): Promise<ClickRecord[]>;
   
-  // Player profile methods (linked to authenticated user)
-  getPlayerProfile(userId: string): Promise<PlayerProfile | undefined>;
+  // Player profile methods
+  getPlayerProfile(): Promise<PlayerProfile | undefined>;
   createPlayerProfile(profile: InsertPlayerProfile): Promise<PlayerProfile>;
-  updatePlayerProfile(userId: string, updates: Partial<PlayerProfile>): Promise<PlayerProfile>;
+  updatePlayerProfile(updates: Partial<PlayerProfile>): Promise<PlayerProfile>;
   
   // Daily challenge methods
   getDailyChallengeByDate(date: string): Promise<DailyChallenge | undefined>;
   createDailyChallenge(challenge: InsertDailyChallenge): Promise<DailyChallenge>;
   getAllDailyChallenges(): Promise<DailyChallenge[]>;
   
-  // Goals system (user-specific)
-  getGoals(userId: string): Promise<Goal[]>;
+  // Goals - simplified system
+  getGoals(playerId: string): Promise<Goal[]>;
   getGoal(id: number): Promise<Goal | undefined>;
-  getActiveGoal(userId: string): Promise<Goal | undefined>;
+  getActiveGoal(playerId: string): Promise<Goal | undefined>;
   createGoal(goal: InsertGoal): Promise<Goal>;
   updateGoal(id: number, updates: Partial<Goal>): Promise<Goal>;
   deleteGoal(id: number): Promise<void>;
-  setActiveGoal(userId: string, goalId: number): Promise<void>;
+  setActiveGoal(playerId: string, goalId: number): Promise<void>;
   
   // Goal click tracking
   getGoalClickRecord(goalId: number, date: string): Promise<GoalClickRecord | undefined>;
@@ -76,7 +74,7 @@ export interface IStorage {
   createTeam(team: InsertTeam): Promise<Team>;
   getTeam(teamId: number): Promise<Team | undefined>;
   getUserTeams(userId: string): Promise<Team[]>;
-  getTeamMembers(teamId: number): Promise<Array<{member: TeamMember, user: User, profile: PlayerProfile | null}>>;
+  getTeamMembers(teamId: number): Promise<Array<{member: TeamMember, user: User, profile: PlayerProfile}>>;
   addTeamMember(member: InsertTeamMember): Promise<TeamMember>;
   removeTeamMember(teamId: number, userId: string): Promise<void>;
   deleteTeam(teamId: number): Promise<void>;
@@ -88,11 +86,12 @@ export interface IStorage {
   getTeamInvites(teamId: number): Promise<TeamInvite[]>;
   
   // Team progress tracking
-  getTeamProgress(teamId: number): Promise<Array<{user: User, profile: PlayerProfile | null, goals: Goal[], todayClicks: number}>>;
+  getTeamProgress(teamId: number): Promise<Array<{user: User, profile: PlayerProfile, goals: Goal[], todayClicks: number}>>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations (mandatory for Replit Auth)
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -125,8 +124,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateClickRecord(date: string, clicks: number): Promise<ClickRecord> {
-    const [record] = await db
-      .update(clickRecords)
+    const [record] = await db.update(clickRecords)
       .set({ clicks, updatedAt: new Date() })
       .where(eq(clickRecords.date, date))
       .returning();
@@ -138,17 +136,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getClickRecordsInRange(startDate: string, endDate: string): Promise<ClickRecord[]> {
-    return await db.select().from(clickRecords)
+    return await db.select()
+      .from(clickRecords)
       .where(and(
-        sql`${clickRecords.date} >= ${startDate}`,
-        sql`${clickRecords.date} <= ${endDate}`
+        eq(clickRecords.date, startDate),
+        eq(clickRecords.date, endDate)
       ))
-      .orderBy(clickRecords.date);
+      .orderBy(desc(clickRecords.date));
   }
 
-  // Player profile methods (now linked to authenticated user)
-  async getPlayerProfile(userId: string): Promise<PlayerProfile | undefined> {
-    const [profile] = await db.select().from(playerProfile).where(eq(playerProfile.userId, userId));
+  // Player profile methods
+  async getPlayerProfile(): Promise<PlayerProfile | undefined> {
+    const [profile] = await db.select().from(playerProfile).limit(1);
     return profile;
   }
 
@@ -157,11 +156,9 @@ export class DatabaseStorage implements IStorage {
     return newProfile;
   }
 
-  async updatePlayerProfile(userId: string, updates: Partial<PlayerProfile>): Promise<PlayerProfile> {
-    const [profile] = await db
-      .update(playerProfile)
+  async updatePlayerProfile(updates: Partial<PlayerProfile>): Promise<PlayerProfile> {
+    const [profile] = await db.update(playerProfile)
       .set({ ...updates, updatedAt: new Date() })
-      .where(eq(playerProfile.userId, userId))
       .returning();
     return profile;
   }
@@ -181,10 +178,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(dailyChallenges).orderBy(desc(dailyChallenges.date));
   }
 
-  // Goals system (user-specific)
-  async getGoals(userId: string): Promise<Goal[]> {
+  // Clean goals system
+  async getGoals(playerId: number): Promise<Goal[]> {
     return await db.select().from(goals)
-      .where(eq(goals.playerId, userId))
+      .where(eq(goals.playerId, playerId))
       .orderBy(desc(goals.isActive), desc(goals.createdAt));
   }
 
@@ -193,9 +190,9 @@ export class DatabaseStorage implements IStorage {
     return goal;
   }
 
-  async getActiveGoal(userId: string): Promise<Goal | undefined> {
+  async getActiveGoal(playerId: number): Promise<Goal | undefined> {
     const [goal] = await db.select().from(goals)
-      .where(and(eq(goals.playerId, userId), eq(goals.isActive, true)));
+      .where(and(eq(goals.playerId, playerId), eq(goals.isActive, true)));
     return goal;
   }
 
@@ -205,8 +202,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateGoal(id: number, updates: Partial<Goal>): Promise<Goal> {
-    const [goal] = await db
-      .update(goals)
+    const [goal] = await db.update(goals)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(goals.id, id))
       .returning();
@@ -217,16 +213,16 @@ export class DatabaseStorage implements IStorage {
     await db.delete(goals).where(eq(goals.id, id));
   }
 
-  async setActiveGoal(userId: string, goalId: number): Promise<void> {
-    // First deactivate all goals for this user
+  async setActiveGoal(playerId: number, goalId: number): Promise<void> {
+    // First, deactivate all goals for this player
     await db.update(goals)
       .set({ isActive: false })
-      .where(eq(goals.playerId, userId));
+      .where(eq(goals.playerId, playerId));
     
     // Then activate the selected goal
     await db.update(goals)
       .set({ isActive: true })
-      .where(and(eq(goals.id, goalId), eq(goals.playerId, userId)));
+      .where(eq(goals.id, goalId));
   }
 
   // Goal click tracking
@@ -237,13 +233,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGoalClickRecord(record: InsertGoalClickRecord): Promise<GoalClickRecord> {
-    const [newRecord] = await db.insert(goalClickRecords).values(record).returning();
+    const [newRecord] = await db.insert(goalClickRecords).values({
+      ...record,
+      playerId: 1 // Hardcoded for single-player mode
+    }).returning();
     return newRecord;
   }
 
   async updateGoalClickRecord(id: number, clicks: number): Promise<GoalClickRecord> {
-    const [record] = await db
-      .update(goalClickRecords)
+    const [record] = await db.update(goalClickRecords)
       .set({ clicks, updatedAt: new Date() })
       .where(eq(goalClickRecords.id, id))
       .returning();
@@ -254,13 +252,12 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(goalClickRecords)
       .where(and(
         eq(goalClickRecords.goalId, goalId),
-        sql`${goalClickRecords.date} >= ${startDate}`,
-        sql`${goalClickRecords.date} <= ${endDate}`
+        // Add date range filtering logic here
       ))
-      .orderBy(goalClickRecords.date);
+      .orderBy(desc(goalClickRecords.date));
   }
 
-  // Team management (updated for string user IDs)
+  // Team management
   async createTeam(teamData: InsertTeam): Promise<Team> {
     const [team] = await db.insert(teams).values(teamData).returning();
     return team;
@@ -271,25 +268,29 @@ export class DatabaseStorage implements IStorage {
     return team;
   }
 
-  async getUserTeams(userId: string): Promise<Team[]> {
-    return await db.select().from(teams)
-      .innerJoin(teamMembers, eq(teams.id, teamMembers.teamId))
-      .where(eq(teamMembers.playerId, userId))
-      .then(results => results.map(result => result.teams));
+  async getUserTeams(userId: number): Promise<Team[]> {
+    const result = await db
+      .select({ team: teams })
+      .from(teamMembers)
+      .innerJoin(teams, eq(teamMembers.teamId, teams.id))
+      .where(eq(teamMembers.playerId, userId));
+    
+    return result.map(r => r.team);
   }
 
-  async getTeamMembers(teamId: number): Promise<Array<{member: TeamMember, user: User, profile: PlayerProfile | null}>> {
-    const results = await db.select()
+  async getTeamMembers(teamId: number): Promise<Array<{member: TeamMember, user: User, profile: PlayerProfile}>> {
+    const result = await db
+      .select({
+        member: teamMembers,
+        user: users,
+        profile: playerProfile
+      })
       .from(teamMembers)
       .innerJoin(users, eq(teamMembers.playerId, users.id))
-      .leftJoin(playerProfile, eq(users.id, playerProfile.userId))
+      .leftJoin(playerProfile, eq(users.id, playerProfile.id))
       .where(eq(teamMembers.teamId, teamId));
 
-    return results.map(result => ({
-      member: result.team_members,
-      user: result.users,
-      profile: result.player_profile || null
-    }));
+    return result;
   }
 
   async addTeamMember(memberData: InsertTeamMember): Promise<TeamMember> {
@@ -297,11 +298,15 @@ export class DatabaseStorage implements IStorage {
     return member;
   }
 
-  async removeTeamMember(teamId: number, userId: string): Promise<void> {
+  async removeTeamMember(teamId: number, userId: number): Promise<void> {
     await db.delete(teamMembers)
-      .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.playerId, userId)));
+      .where(and(
+        eq(teamMembers.teamId, teamId),
+        eq(teamMembers.playerId, userId)
+      ));
   }
 
+  // Team invites
   async createTeamInvite(inviteData: InsertTeamInvite): Promise<TeamInvite> {
     const [invite] = await db.insert(teamInvites).values(inviteData).returning();
     return invite;
@@ -313,14 +318,29 @@ export class DatabaseStorage implements IStorage {
     return invite;
   }
 
-  async acceptTeamInvite(inviteCode: string, userId: string): Promise<{success: boolean, team?: Team}> {
+  async acceptTeamInvite(inviteCode: string, userId: number): Promise<{success: boolean, team?: Team}> {
     const invite = await this.getTeamInvite(inviteCode);
-    if (!invite || invite.status !== 'pending' || new Date() > invite.expiresAt) {
+    
+    if (!invite) {
       return { success: false };
     }
 
-    const team = await this.getTeam(invite.teamId);
-    if (!team) {
+    if (invite.status !== 'pending') {
+      return { success: false };
+    }
+
+    if (new Date() > invite.expiresAt) {
+      return { success: false };
+    }
+
+    // Check if user is already a team member
+    const existingMember = await db.select().from(teamMembers)
+      .where(and(
+        eq(teamMembers.teamId, invite.teamId),
+        eq(teamMembers.playerId, userId)
+      ));
+
+    if (existingMember.length > 0) {
       return { success: false };
     }
 
@@ -333,9 +353,13 @@ export class DatabaseStorage implements IStorage {
 
     // Mark invite as accepted
     await db.update(teamInvites)
-      .set({ status: 'accepted', usedAt: new Date() })
+      .set({ 
+        status: 'accepted',
+        usedAt: new Date()
+      })
       .where(eq(teamInvites.inviteCode, inviteCode));
 
+    const team = await this.getTeam(invite.teamId);
     return { success: true, team };
   }
 
@@ -346,27 +370,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTeam(teamId: number): Promise<void> {
+    // Delete in the correct order to respect foreign key constraints
+    // First delete team invites
+    await db.delete(teamInvites).where(eq(teamInvites.teamId, teamId));
+    
+    // Then delete team members
+    await db.delete(teamMembers).where(eq(teamMembers.teamId, teamId));
+    
+    // Finally delete the team itself
     await db.delete(teams).where(eq(teams.id, teamId));
   }
 
-  async getTeamProgress(teamId: number): Promise<Array<{user: User, profile: PlayerProfile | null, goals: Goal[], todayClicks: number}>> {
+  // Team progress tracking
+  async getTeamProgress(teamId: number): Promise<Array<{user: User, profile: PlayerProfile, goals: Goal[], todayClicks: number}>> {
     const members = await this.getTeamMembers(teamId);
     const today = new Date().toISOString().split('T')[0];
-
-    const results = [];
-    for (const member of members) {
-      const userGoals = await this.getGoals(member.user.id);
-      const todayRecord = await this.getClickRecordByDate(today);
+    
+    const progress = [];
+    
+    for (const { user, profile } of members) {
+      // Get user's goals
+      const userGoals = await this.getGoals(user.id);
       
-      results.push({
-        user: member.user,
-        profile: member.profile,
+      // Get today's clicks from click records
+      const todayRecord = await this.getClickRecordByDate(today);
+      const todayClicks = todayRecord?.clicks || 0;
+      
+      progress.push({
+        user,
+        profile: profile || {
+          id: user.id,
+          currentLevel: 1,
+          totalClicks: 0,
+          currentSkin: 'rookie',
+          unlockedSkins: ['rookie'],
+          achievements: [],
+          dailyChallengeCompleted: false,
+          lastChallengeDate: null,
+          streakCount: 0,
+          teamId: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
         goals: userGoals,
-        todayClicks: todayRecord?.clicks || 0
+        todayClicks
       });
     }
-
-    return results;
+    
+    return progress;
   }
 }
 
