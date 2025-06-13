@@ -387,164 +387,292 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      {/* Navigation */}
-      <nav className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold text-text-primary">Task Tracker</h1>
-        <div className="flex gap-2">
-          <Link href="/goals">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Target size={16} />
-              Goals
-            </Button>
-          </Link>
-          <Link href="/social">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Users size={16} />
-              Community
-            </Button>
-          </Link>
-          <Link href="/teams">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Users size={16} />
-              Teams
-            </Button>
-          </Link>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.href = '/api/logout'}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            Logout
-          </Button>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{animationDelay: '4s'}}></div>
+      </div>
 
-      {/* Header */}
-      <header className="text-center mb-8">
-        <Card className="border-gray-100 bg-gradient-to-r from-orange-50 to-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center mb-4">
-              <div 
-                className="w-20 h-20 rounded-full flex items-center justify-center mr-4 shadow-lg border-4 border-white transition-all duration-500 hover:scale-105"
-                style={{ 
-                  backgroundColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280',
-                  boxShadow: `0 0 20px ${gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280'}40`
-                }}
-              >
-                <Crown className="text-white drop-shadow-lg" size={36} />
+      <div className="relative z-10 container mx-auto px-4 py-6 max-w-7xl">
+        {/* Modern Navigation */}
+        <nav className="flex justify-between items-center mb-8 bg-white/70 backdrop-blur-lg rounded-2xl px-6 py-4 border border-white/20 shadow-lg shadow-blue-100/25">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-tr from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Trophy className="text-white" size={24} />
               </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-text-primary">
-                  {currentGoal ? `${getGoalLevelTitle(currentGoal.totalClicks || 0)} ${currentGoal.name}` : "Basketball Training"}
-                </h1>
-                <p className="text-lg text-text-secondary">
-                  {currentGoal ? `${currentGoal.name} Level • Level ${getGoalLevel(currentGoal.totalClicks || 0)}` : `${gameData?.levelData?.name || "Rookie"} • Level ${gameData?.profile?.currentLevel || 1}`}
-                </p>
-                <div className="flex items-center mt-1">
-                  <div 
-                    className="w-3 h-3 rounded-full mr-2 border border-white"
-                    style={{ backgroundColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280' }}
-                  ></div>
-                  <span className="text-sm text-text-secondary">
-                    {gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.name || "Rookie Uniform"}
-                  </span>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-ping"></div>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Productivity Arena</h1>
+              <div className="text-xs text-gray-500 font-medium">Championship Mode Active</div>
+            </div>
+          </div>
+          <div className="flex space-x-3">
+            <Link href="/goals">
+              <Button variant="outline" className="flex items-center gap-2 border-gray-200/60 hover:border-orange-300 hover:bg-orange-50/80 transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                <Target size={16} />
+                Goals
+              </Button>
+            </Link>
+            <Link href="/social">
+              <Button variant="outline" className="flex items-center gap-2 border-gray-200/60 hover:border-blue-300 hover:bg-blue-50/80 transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                <Users size={16} />
+                Community
+              </Button>
+            </Link>
+            <Link href="/teams">
+              <Button variant="outline" className="flex items-center gap-2 border-gray-200/60 hover:border-purple-300 hover:bg-purple-50/80 transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                <Users size={16} />
+                Teams
+              </Button>
+            </Link>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/api/logout'}
+              className="text-gray-600 hover:text-gray-900 border-gray-200/60 hover:border-red-300 hover:bg-red-50/80 transition-all duration-300"
+            >
+              Logout
+            </Button>
+          </div>
+        </nav>
+
+        {/* Enhanced Hero Header */}
+        <header className="text-center mb-8">
+          <Card className="border-white/30 bg-gradient-to-br from-white/80 via-white/60 to-white/40 backdrop-blur-xl shadow-2xl shadow-blue-100/50 overflow-hidden relative">
+            {/* Floating particles effect */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`absolute w-2 h-2 ${['bg-orange-300', 'bg-blue-300', 'bg-purple-300'][i % 3]} rounded-full opacity-30 animate-bounce`}
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 2}s`,
+                    animationDuration: `${2 + Math.random() * 2}s`
+                  }}
+                />
+              ))}
+            </div>
+
+            <CardContent className="pt-8 pb-6 relative z-10">
+              <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6">
+                {/* Avatar and Main Info */}
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <div 
+                      className="w-24 h-24 rounded-2xl flex items-center justify-center shadow-2xl border-4 border-white/60 transition-all duration-700 hover:scale-110 hover:rotate-6 cursor-pointer group"
+                      style={{ 
+                        backgroundColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280',
+                        boxShadow: `0 20px 40px ${gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280'}30`
+                      }}
+                    >
+                      <Crown className="text-white drop-shadow-2xl group-hover:scale-110 transition-transform duration-300" size={40} />
+                    </div>
+                    {/* Level badge */}
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white">
+                      L{currentGoal ? getGoalLevel(currentGoal.totalClicks || 0) : gameData?.profile?.currentLevel || 1}
+                    </div>
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 rounded-2xl animate-pulse opacity-20 bg-gradient-to-r from-orange-400 to-blue-400"></div>
+                  </div>
+                  
+                  <div className="text-left">
+                    <h1 className="text-3xl lg:text-4xl font-black bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 bg-clip-text text-transparent mb-2">
+                      {currentGoal ? `${getGoalLevelTitle(currentGoal.totalClicks || 0)} ${currentGoal.name}` : "Basketball Training"}
+                    </h1>
+                    <p className="text-lg font-semibold text-gray-600 mb-3">
+                      {currentGoal ? `${currentGoal.name} Champion` : `${gameData?.levelData?.name || "Rookie"} Player`} • Level {currentGoal ? getGoalLevel(currentGoal.totalClicks || 0) : gameData?.profile?.currentLevel || 1}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-4 h-4 rounded-full border-2 border-white shadow-lg"
+                        style={{ backgroundColor: gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.color || '#6B7280' }}
+                      ></div>
+                      <span className="text-sm font-medium text-gray-600">
+                        {gameData?.availableSkins?.find(s => s.id === gameData.profile.currentSkin)?.name || "Rookie Uniform"}
+                      </span>
+                      <Badge variant="secondary" className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border-0">
+                        {gameData?.levelData?.description || "Rising Star"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="flex gap-4 lg:gap-6">
+                  <div className="text-center bg-white/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/40 hover:bg-white/80 transition-all duration-300">
+                    <div className="text-2xl font-bold text-orange-600">{todayData?.clicks || 0}</div>
+                    <div className="text-xs text-gray-600 font-medium">Today</div>
+                  </div>
+                  <div className="text-center bg-white/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/40 hover:bg-white/80 transition-all duration-300">
+                    <div className="text-2xl font-bold text-blue-600">{weeklyData?.totalClicks || 0}</div>
+                    <div className="text-xs text-gray-600 font-medium">This Week</div>
+                  </div>
+                  <div className="text-center bg-white/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/40 hover:bg-white/80 transition-all duration-300">
+                    <div className="text-2xl font-bold text-purple-600">{gameData?.profile?.streakCount || 0}</div>
+                    <div className="text-xs text-gray-600 font-medium">Streak</div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="text-text-secondary">
-              <p className="text-sm">
-                {gameData?.levelData?.description || "Just starting your basketball journey"}
-              </p>
+
+              {/* Progress Section */}
               {(currentGoal || gameData?.nextLevelData) && (
-                <div className="mt-3">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span>Level Progress: {currentGoal ? currentGoal.name : gameData?.nextLevelData?.name}</span>
-                    <span>
+                <div className="mt-6 bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/40">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-semibold text-gray-700">
+                      Progress to Next Level: {currentGoal ? currentGoal.name : gameData?.nextLevelData?.name}
+                    </span>
+                    <span className="text-sm font-bold text-gray-800">
                       {currentGoal ? 
-                        `${(currentGoal.totalClicks || 0) % 100} / 100 to next level` : 
+                        `${(currentGoal.totalClicks || 0) % 100} / 100` : 
                         `${gameData?.profile?.totalClicks || 0} / ${gameData?.nextLevelData?.clicksRequired || 100}`
                       }
                     </span>
                   </div>
-                  <Progress 
-                    value={Math.min(currentGoal ? 
-                      ((currentGoal.totalClicks || 0) % 100) :
-                      ((gameData?.profile?.totalClicks || 0) / (gameData?.nextLevelData?.clicksRequired || 100)) * 100, 100)} 
-                    className="h-2"
-                  />
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </header>
-
-
-
-      {/* Active Goal */}
-      {currentGoal && (
-        <section className="mb-8">
-          <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-blue-800">
-                <Target className="mr-2" size={20} />
-                Active Focus: {currentGoal.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-blue-900">{currentGoal.description}</p>
-                  <p className="text-sm text-blue-700 mt-1">
-                    Level {currentGoal?.currentLevel || 1} • {currentGoal?.totalClicks || 0} clicks
-                  </p>
-                  <div className="mt-2">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span>Weekly Target Progress</span>
-                      <span>{goalTodayData?.clicks || 0} / {currentGoal?.weeklyTarget || 100}</span>
-                    </div>
+                  <div className="relative">
                     <Progress 
-                      value={Math.min(((goalTodayData?.clicks || 0) / (currentGoal?.weeklyTarget || 100)) * 100, 100)} 
-                      className="h-2"
+                      value={Math.min(currentGoal ? 
+                        ((currentGoal.totalClicks || 0) % 100) :
+                        ((gameData?.profile?.totalClicks || 0) / (gameData?.nextLevelData?.clicksRequired || 100)) * 100, 100)} 
+                      className="h-3 bg-gray-200/50"
                     />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-400/20 to-blue-400/20 animate-pulse"></div>
                   </div>
                 </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  <Zap className="mr-1" size={12} />
-                  Active
-                </Badge>
-              </div>
+              )}
             </CardContent>
           </Card>
-        </section>
-      )}
+        </header>
 
-      {/* Daily Challenge */}
-      {dailyChallenge && (
-        <section className="mb-8">
-          <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-amber-800">
-                <Target className="mr-2" size={20} />
-                Daily Challenge
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-amber-900">{dailyChallenge.description}</p>
-                  <p className="text-sm text-amber-700 mt-1">Reward: {dailyChallenge.reward}</p>
+
+
+        {/* Active Goal - Enhanced */}
+        {currentGoal && (
+          <section className="mb-8">
+            <Card className="border-white/30 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-indigo-500/10 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden relative">
+              {/* Animated border glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 opacity-20 blur-sm animate-pulse"></div>
+              <div className="absolute inset-[1px] bg-gradient-to-br from-white/90 to-white/70 rounded-lg"></div>
+              
+              <CardHeader className="pb-3 relative z-10">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-300">
+                      <Target className="text-white" size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">
+                        FOCUS TARGET
+                      </h3>
+                      <p className="text-sm text-gray-600 font-medium">{currentGoal.name}</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-gradient-to-r from-green-400 to-blue-500 text-white border-0 animate-pulse">
+                    <Zap className="mr-1" size={12} />
+                    LOCKED IN
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="relative z-10">
+                <div className="space-y-4">
+                  <p className="font-semibold text-gray-800">{currentGoal.description}</p>
+                  
+                  <div className="flex items-center justify-between bg-white/50 rounded-xl p-3 backdrop-blur-sm">
+                    <div className="text-center">
+                      <div className="text-2xl font-black text-blue-600">{currentGoal?.currentLevel || 1}</div>
+                      <div className="text-xs text-gray-600 font-medium">LEVEL</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-black text-purple-600">{currentGoal?.totalClicks || 0}</div>
+                      <div className="text-xs text-gray-600 font-medium">TOTAL REPS</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-black text-green-600">{goalTodayData?.clicks || 0}</div>
+                      <div className="text-xs text-gray-600 font-medium">TODAY</div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-gray-700">Weekly Domination</span>
+                      <span className="text-sm font-black text-gray-800">
+                        {goalTodayData?.clicks || 0} / {currentGoal?.weeklyTarget || 100}
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <Progress 
+                        value={Math.min(((goalTodayData?.clicks || 0) / (currentGoal?.weeklyTarget || 100)) * 100, 100)} 
+                        className="h-3 bg-gray-200/50"
+                      />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/30 to-purple-400/30 animate-pulse"></div>
+                    </div>
+                  </div>
                 </div>
-                <Badge variant="secondary" className="bg-amber-100 text-amber-800">
-                  <Zap className="mr-1" size={12} />
-                  Active
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {/* Daily Challenge - Beast Mode */}
+        {dailyChallenge && (
+          <section className="mb-8">
+            <Card className="border-white/30 bg-gradient-to-br from-orange-500/10 via-yellow-500/5 to-red-500/10 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden relative">
+              {/* Fire animation effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-red-400 to-yellow-400 opacity-20 blur-sm animate-pulse"></div>
+              <div className="absolute inset-[1px] bg-gradient-to-br from-white/90 to-white/70 rounded-lg"></div>
+              
+              <CardHeader className="pb-3 relative z-10">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-300 animate-pulse">
+                      <Zap className="text-white" size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-orange-700 to-red-700 bg-clip-text text-transparent">
+                        DAILY BEAST MODE
+                      </h3>
+                      <p className="text-sm text-gray-600 font-medium">24hr Challenge Window</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 animate-bounce">
+                    <Target className="mr-1" size={12} />
+                    HUNT
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="relative z-10">
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-4 border-l-4 border-orange-500">
+                    <p className="font-bold text-gray-800 text-lg">{dailyChallenge.description}</p>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-sm font-semibold text-orange-700">Victory Reward</span>
+                      <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        {dailyChallenge.reward}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-center space-x-4">
+                    <Button 
+                      className="bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 transform hover:scale-105 transition-all duration-300 shadow-lg"
+                      onClick={() => {/* Handle challenge acceptance */}}
+                    >
+                      CRUSH IT NOW
+                    </Button>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 font-medium">Time Left</div>
+                      <div className="text-sm font-bold text-orange-600">23:47:12</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
       {/* Click Section */}
       <section className="text-center mb-8">
@@ -924,10 +1052,11 @@ export default function Home() {
         </Card>
       </section>
 
-      {/* Footer */}
-      <footer className="text-center mt-8 text-text-secondary text-sm">
-        <p>Your basketball journey is automatically saved • Keep training to unlock more rewards!</p>
-      </footer>
+        {/* Footer */}
+        <footer className="text-center mt-8 text-text-secondary text-sm">
+          <p>Your basketball journey is automatically saved • Keep training to unlock more rewards!</p>
+        </footer>
+      </div>
     </div>
   );
 }
