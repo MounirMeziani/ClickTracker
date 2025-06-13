@@ -18,21 +18,32 @@
  * - Team collaboration features
  * - Daily challenges system
  */
-import { pgTable, serial, text, varchar, integer, timestamp, date, boolean, unique } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, integer, timestamp, date, boolean, unique, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-/**
- * USERS TABLE
- * Core user authentication and identification
- * Used for login/registration (currently simplified, no real auth system)
- */
+// Session storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: varchar("username").unique().notNull(),
-  password: text("password").notNull(), // NOTE: In production, this should be hashed
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 /**
@@ -51,6 +62,7 @@ export const clickRecords = pgTable("click_records", {
 
 export const playerProfile = pgTable("player_profile", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
   currentLevel: integer("current_level").notNull().default(1),
   totalClicks: integer("total_clicks").notNull().default(0),
   currentSkin: text("current_skin").notNull().default("rookie"),
@@ -129,7 +141,7 @@ export const teamInvites = pgTable("team_invites", {
  */
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
-  playerId: integer("player_id").notNull(), // References users.id
+  playerId: varchar("player_id").notNull().references(() => users.id), // References users.id
   name: varchar("name", { length: 255 }).notNull(), // User-customizable goal name
   description: text("description"), // User-customizable description
   category: varchar("category", { length: 100 }).default("general"), // Categories like "productivity", "learning"
@@ -144,7 +156,7 @@ export const goals = pgTable("goals", {
 
 export const goalClickRecords = pgTable("goal_click_records", {
   id: serial("id").primaryKey(),
-  playerId: integer("player_id").notNull(),
+  playerId: varchar("player_id").notNull().references(() => users.id),
   goalId: integer("goal_id").notNull().references(() => goals.id, { onDelete: "cascade" }),
   date: varchar("date", { length: 10 }).notNull(),
   clicks: integer("clicks").default(0),
@@ -152,10 +164,14 @@ export const goalClickRecords = pgTable("goal_click_records", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export type UpsertUser = typeof users.$inferInsert;
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
 });
 
 export const insertClickRecordSchema = createInsertSchema(clickRecords).pick({
