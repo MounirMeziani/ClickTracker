@@ -160,7 +160,11 @@ export class DatabaseStorage implements IStorage {
   async updatePlayerProfile(userId: string, updates: Partial<PlayerProfile>): Promise<PlayerProfile> {
     const [profile] = await db
       .update(playerProfile)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ 
+        userId,
+        ...updates, 
+        updatedAt: new Date() 
+      })
       .where(eq(playerProfile.userId, userId))
       .returning();
     return profile;
@@ -237,7 +241,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGoalClickRecord(record: InsertGoalClickRecord): Promise<GoalClickRecord> {
-    const [newRecord] = await db.insert(goalClickRecords).values(record).returning();
+    const [newRecord] = await db.insert(goalClickRecords).values({
+      playerId: record.playerId,
+      goalId: record.goalId,
+      date: record.date,
+      clicks: record.clicks || 0
+    }).returning();
     return newRecord;
   }
 

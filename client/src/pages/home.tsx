@@ -270,9 +270,9 @@ export default function Home() {
       console.log("Active goal:", activeGoal);
       
       // Use goal-specific endpoint if there's an active goal
-      if (activeGoal?.id) {
-        console.log("Using goal-specific decrement endpoint for goal ID:", activeGoal.id);
-        return fetch(`/api/goals/${activeGoal.id}/decrement`, { method: "POST" }).then(res => {
+      if ((activeGoal as any)?.id) {
+        console.log("Using goal-specific decrement endpoint for goal ID:", (activeGoal as any).id);
+        return fetch(`/api/goals/${(activeGoal as any).id}/decrement`, { method: "POST" }).then(res => {
           console.log("Goal-specific decrement response status:", res.status);
           return res.json();
         });

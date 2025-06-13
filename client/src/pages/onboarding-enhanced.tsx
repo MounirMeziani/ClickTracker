@@ -123,7 +123,7 @@ export default function OnboardingEnhanced() {
     }, 300);
   };
 
-  const userName = user?.firstName || user?.email?.split('@')[0] || "Champion";
+  const userName = (user as any)?.firstName || (user as any)?.email?.split('@')[0] || "Champion";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-purple-50 p-4 relative overflow-hidden">
